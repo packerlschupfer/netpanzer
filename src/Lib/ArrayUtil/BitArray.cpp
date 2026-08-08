@@ -153,9 +153,8 @@ bool BitArray::getBit(unsigned long x, unsigned long y) const {
 
 #else
 
-#include "test.hpp"
-
 #include "ArrayUtil/BitArray.hpp"
+#include "test.hpp"
 
 namespace {
 

@@ -63,12 +63,11 @@ bool NetMessageEncoder::encodeMessage(NetMessage* message, size_t size) {
 
 #else
 
-#include "test.hpp"
-
 #include <string.h>
 
 #include "Classes/Network/NetMessageDecoder.hpp"
 #include "Classes/Network/NetMessageEncoder.hpp"
+#include "test.hpp"
 
 namespace {
 
@@ -104,8 +103,8 @@ static void testEndian(void) {
     assert(btoh16(htob16(val)) == val);
   }
 
-  const Uint32 v32[] = {0u,          1u,          0xFFu,      0x100u,
-                        0xFFFFu,     0x10000u,    0x12345678u, 0xDEADBEEFu,
+  const Uint32 v32[] = {0u,          1u,         0xFFu,       0x100u,
+                        0xFFFFu,     0x10000u,   0x12345678u, 0xDEADBEEFu,
                         0x80000000u, 0xFFFFFFFFu};
   for (size_t i = 0; i < sizeof(v32) / sizeof(v32[0]); i++) {
     assert(ltoh32(htol32(v32[i])) == v32[i]);
