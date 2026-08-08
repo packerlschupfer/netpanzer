@@ -49,7 +49,7 @@ class BitArray : public NoCopy {
 
   void clearBit(unsigned long x, unsigned long y);
 
-  bool getBit(unsigned long x, unsigned long y);
+  bool getBit(unsigned long x, unsigned long y) const;
 };
 
 #endif  // ** _BITARRAY_HPP
