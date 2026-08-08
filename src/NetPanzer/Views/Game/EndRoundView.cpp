@@ -56,6 +56,8 @@ static const char* table_header =
 static const char* stats_format = "%-20s%6i%7i%7i%6i";
 
 EndRoundView::EndRoundView() : SpecialButtonView() {
+  viewableMessageCount = 0;
+
   setSearchName("EndRoundView");
   setTitle("Round stats");
   setSubTitle("");

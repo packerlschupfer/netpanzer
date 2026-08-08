@@ -29,7 +29,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Util/Exception.hpp"
 #include "Util/FileSystem.hpp"
 
-WorldMap::WorldMap() : map_loaded(false), map_buffer(0) {}
+WorldMap::WorldMap() : map_loaded(false), map_buffer(0) {
+  // getWidth()/getHeight() read straight out of map_info, and those feed the
+  // BitArray sizes in Astar as well as the bucket array geometry. Before a
+  // map is loaded they used to report garbage rather than zero.
+  memset(&map_info, 0, sizeof(map_info));
+}
 
 WorldMap::~WorldMap() { delete[] map_buffer; }
 

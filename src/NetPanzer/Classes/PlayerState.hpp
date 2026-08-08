@@ -46,7 +46,9 @@ class NetworkPlayerState {
   PlayerID getPlayerIndex() const;
 
  private:
-  NetworkPlayerState() {}
+  // This struct is sent over the wire by PlayerStateSync, so an unset name
+  // buffer would put this process's memory on the network.
+  NetworkPlayerState() { memset(name, 0, sizeof(name)); }
   friend class PlayerState;
   friend class PlayerStateSync;
 

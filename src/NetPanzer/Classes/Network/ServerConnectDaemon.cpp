@@ -130,7 +130,9 @@ class StateMachine {
   T state;
 
  public:
-  StateMachine() : current(0) {}
+  // 'state' is what isState() compares against, so leaving it
+  // uninitialised made the very first comparison meaningless.
+  StateMachine() : current(0), state(T()) {}
   ~StateMachine() {
     for (int i = 0; i < states.size(); i++) {
       delete states[i];

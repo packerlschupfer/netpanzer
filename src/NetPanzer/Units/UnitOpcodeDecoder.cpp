@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 UnitOpcodeDecoder::UnitOpcodeDecoder() {
   memset(&opcode_message, 0, sizeof(opcode_message));
+  opcode_size = 0;
   reset();
 }
 
@@ -33,6 +34,10 @@ void UnitOpcodeDecoder::setMessage(const NetMessage* message, size_t size) {
   if (size > sizeof(opcode_message)) {
     LOGGER.warning("Opcodemessage too big.");
     memset(&opcode_message, 0, sizeof(opcode_message));
+    // reset() only rewinds opcode_index, so without this the decoder kept the
+    // previous message's length over a buffer that has just been cleared.
+    // The size comes off the network, so this path is remotely reachable.
+    opcode_size = 0;
     reset();
     return;
   }

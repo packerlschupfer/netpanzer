@@ -29,9 +29,17 @@ SpritePacked PowerUp::POWERUP_ANIM_SHADOW;
 SpritePacked PowerUp::POWERUP_ANIM_R;
 SpritePacked PowerUp::POWERUP_ANIM_SHADOW_R;
 
-PowerUp::PowerUp() { life_cycle_state = _power_up_lifecycle_state_active; }
+PowerUp::PowerUp() {
+  // 'next' is the link pointer used by PowerUpInterface's list; leaving it
+  // and 'type' uninitialised meant a default-constructed PowerUp carried a
+  // garbage successor.
+  next = 0;
+  type = 0;
+  life_cycle_state = _power_up_lifecycle_state_active;
+}
 
 PowerUp::PowerUp(iXY map_loc, PowerUpID ID, int type) {
+  next = 0;
   this->map_loc = map_loc;
   this->ID = ID;
   this->type = type;
@@ -59,6 +67,7 @@ PowerUp::PowerUp(iXY map_loc, PowerUpID ID, int type) {
 }
 
 PowerUp::PowerUp(iXY map_loc, int type) {
+  next = 0;
   this->map_loc = map_loc;
   this->ID = -1;
   this->type = type;

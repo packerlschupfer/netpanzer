@@ -124,6 +124,9 @@ Vehicle::Vehicle(bool liveornot, PlayerState *player, unsigned char utype,
   fsmBodyRotate_goal_angle = 0;
   fsmTurretRotate_rotation = 0;
   fsmTurretRotate_goal_angle = 0;
+  // Gates whether the turret is allowed to fire; the neighbouring fsm state
+  // was initialised here but this flag was not.
+  fsmTurretTrackTarget_on_target = false;
 
   interpolation_speed = 0;
   fsmMove_first_stamp = false;

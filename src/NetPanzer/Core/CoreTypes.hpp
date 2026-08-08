@@ -65,7 +65,9 @@ class TestPlayerID {
   operator unsigned int() { return c; }
 
  public:
-  TestPlayerID() {}
+  // Every comparison and the conversion operator read 'c'; a default
+  // constructed id used to be an arbitrary player.
+  TestPlayerID() : c(0) {}
   ~TestPlayerID() {}
   bool operator>=(const TestPlayerID& o) { return c >= o.c; }
   bool operator<(const TestPlayerID& o) { return c < o.c; }

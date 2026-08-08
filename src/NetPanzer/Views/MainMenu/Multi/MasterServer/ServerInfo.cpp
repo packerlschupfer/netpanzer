@@ -26,6 +26,7 @@ ServerInfo::ServerInfo()
       players(0),
       maxplayers(0),
       ping(0),
+      protocol(0),
       needs_password(false),
       auth_on(false),
       querystartticks(0),

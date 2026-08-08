@@ -110,9 +110,20 @@ class AngleInt {
     angle_limit = (360 / grain);
   }
 
-  AngleInt(long x, long y) { angle_int = Angle(x, y).DegreesInt(); }
+  // These two set the angle but not the granularity it is measured in, so
+  // grain and the limit derived from it were left over from whatever memory
+  // the object landed on. 10 matches the default used elsewhere.
+  AngleInt(long x, long y) {
+    angle_int = Angle(x, y).DegreesInt();
+    grain = 10;
+    angle_limit = (360 / grain);
+  }
 
-  AngleInt(iXY& vec) { angle_int = Angle(vec).DegreesInt(); }
+  AngleInt(iXY& vec) {
+    angle_int = Angle(vec).DegreesInt();
+    grain = 10;
+    angle_limit = (360 / grain);
+  }
 
   inline void set(long nAngle, unsigned long granularity) {
     angle_int = nAngle;

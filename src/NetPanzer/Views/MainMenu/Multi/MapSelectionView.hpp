@@ -35,7 +35,7 @@ class MapInfo {
   iXY cells;
   int objectiveCount;
 
-  MapInfo() {}
+  MapInfo() : objectiveCount(0) {}
 };  // end MapInfo
 
 //---------------------------------------------------------------------------

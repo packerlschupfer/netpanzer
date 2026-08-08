@@ -63,6 +63,10 @@ static const char* stats_format = "%-20s%6i%7i%7i%6i";
 // RankView
 //---------------------------------------------------------------------------
 RankView::RankView() : GameTemplateView() {
+  viewableMessageCount = 0;
+  mstate = 0;
+  tstate = 0;
+
   setSearchName("RankView");
   setTitle("Rankings");
   setSubTitle(" - TAB");

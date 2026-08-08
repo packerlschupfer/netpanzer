@@ -31,6 +31,9 @@ public:
     color = input_color;
     blend_color = input_blend_color;
     offsetY = 0;
+    // Recomputed by setScrolling() below, but it is read before that in some
+    // paths and was otherwise left at whatever the allocation held.
+    maxY = 0;
     setScrolling(false, 0);
     iXY buttonSize(20, 20);
     iXY buttonPos(input_rect.getSize().x - buttonSize.x, 0);

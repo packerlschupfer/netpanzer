@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 unsigned char UStyleSelectionView::rstyle_mem;
 
 UStyleSelectionView::UStyleSelectionView() : View() {
+  text_current = 0;
+
   setSearchName("UStyleSelectionView");
   setTitle("UStyle Selection");
   setSubTitle("");

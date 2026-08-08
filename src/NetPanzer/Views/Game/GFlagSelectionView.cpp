@@ -72,6 +72,8 @@ class GFlagButton : public Button {
 };
 
 GFlagSelectionView::GFlagSelectionView() : View() {
+  text_current = 0;
+
   setSearchName("GFlagSelectionView");
   setTitle("GFlag Selection");
   setSubTitle("");

@@ -25,6 +25,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ClientConnectJoinRequest::ClientConnectJoinRequest() {
   message_class = _net_message_class_connect;
   message_id = _net_message_id_connect_join_game_request;
+  // This message goes out over the wire. Any byte left unset here is a byte
+  // of this process's memory handed to the peer, so the buffer fields are
+  // cleared rather than left to whatever the stack held.
+  memset(password, 0, sizeof(password));
 }
 
 Uint32 ClientConnectJoinRequest::getProtocolVersion() const {
@@ -100,6 +104,13 @@ ConnectMesgServerGameSettings::ConnectMesgServerGameSettings() {
   message_id = _net_message_id_connect_server_game_setup;
   memset(map_name, 0, sizeof(map_name));
   memset(map_style, 0, sizeof(map_style));
+  // The server sends this to every client that connects. map_name and
+  // map_style were already cleared; tank_styles is another 176 bytes of the
+  // same buffer and was not, so whatever the server's memory happened to
+  // hold went out with it.
+  memset(tank_styles, 0, sizeof(tank_styles));
+  wind_speed = 0.0f;
+  elapsed_time = 0;
 }
 
 Uint16 ConnectMesgServerGameSettings::getMaxPlayers() const {

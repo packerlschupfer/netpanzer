@@ -33,8 +33,11 @@ class UnitBase {
   UnitState unit_state;
   bool in_sync_flag;
 
+  // in_sync_flag gates network resynchronisation and groupLinkNext is the
+  // link pointer for unit groups; both used to start as whatever the
+  // allocator handed over.
   UnitBase(PlayerState* newPlayer, UnitID newId)
-      : player(newPlayer), id(newId) {}
+      : player(newPlayer), id(newId), in_sync_flag(false), groupLinkNext(0) {}
   virtual ~UnitBase() {}
 
   virtual void processMessage(const UnitMessage*) = 0;

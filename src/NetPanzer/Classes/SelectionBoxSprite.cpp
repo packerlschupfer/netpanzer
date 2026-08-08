@@ -62,6 +62,14 @@ UnitSelectionBox::UnitSelectionBox() {
   allie_state = false;
   flag_visibility_state = false;
   unit_flag = 0;
+  // Inherited from SelectionBoxSprite, plus the hit-bar fields: all are set
+  // per-frame from the unit being drawn, but a box constructed and blitted
+  // before that happened used a garbage colour and bar length.
+  box_color = 0;
+  box_state = 0;
+  hit_bar_color = 0;
+  hit_points = 0;
+  max_hit_points = 0;
 }
 
 void UnitSelectionBox::blit(Surface *surface, const iRect &world_win) {

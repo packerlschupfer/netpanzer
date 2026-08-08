@@ -42,6 +42,13 @@ UnitState::UnitState() {
   unit_style = 0;
   moving = false;
 
+  // These three drive the simulation and are also written from network
+  // messages, so a partially-populated UnitState used to start out with a
+  // garbage lifecycle state and unit type.
+  unit_type = 0;
+  max_hit_points = 100;
+  lifecycle_state = _UNIT_LIFECYCLE_ACTIVE;
+
   threat_level = _threat_level_all_clear;
 }
 
