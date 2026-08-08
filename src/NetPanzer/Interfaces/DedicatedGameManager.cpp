@@ -222,8 +222,13 @@ bool DedicatedGameManager::mainLoop() {
 
         if (player->getTotal() < GameConfig::game_lowscorelimit + 1) {
           char chat_string_warning_k[140];
-          sprintf(chat_string_warning_k, "Server kicked '%s' due to noobiness!",
-                  player->getName().c_str());
+          // The name is remote input. It fits today only because
+          // PlayerState::setName truncates to 20 characters, three files
+          // away; snprintf means raising that limit cannot turn this into an
+          // overflow.
+          snprintf(chat_string_warning_k, sizeof(chat_string_warning_k),
+                   "Server kicked '%s' due to noobiness!",
+                   player->getName().c_str());
           LOGGER.info("DED: %s", chat_string_warning_k);
           ChatInterface::serversay(chat_string_warning_k);
           SERVER->kickClient(
@@ -245,9 +250,9 @@ bool DedicatedGameManager::mainLoop() {
         if (player->getTotal() < GameConfig::game_lowscorelimit + 10 &&
             player->getTotal() > GameConfig::game_lowscorelimit) {
           char chat_string_warning[140];
-          sprintf(chat_string_warning,
-                  "Warning '%s' - players with %i points or less get kicked!",
-                  player->getName().c_str(), GameConfig::game_lowscorelimit);
+          snprintf(chat_string_warning, sizeof(chat_string_warning),
+                   "Warning '%s' - players with %i points or less get kicked!",
+                   player->getName().c_str(), GameConfig::game_lowscorelimit);
           // ChatInterface::serversay(chat_string_warning);
           ChatInterface::serversayTo(player->getID(), chat_string_warning);
         }
