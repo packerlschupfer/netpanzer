@@ -141,6 +141,7 @@ class Astar : private MapInterface {
 
  public:
   Astar();
+  ~Astar();
 
   void initializeAstar(unsigned long node_list_size,
                        unsigned long step_limit = 50);
