@@ -484,7 +484,8 @@ BitArray *Astar::getSampledSetArrays() { return &astar_set_array; }
 
 #else
 
-#include "test.hpp"
+#include <cstdio>
+#include <vector>
 
 #include "Astar.hpp"
 #include "Classes/AI/PathList.hpp"
@@ -492,9 +493,7 @@ BitArray *Astar::getSampledSetArrays() { return &astar_set_array; }
 #include "Interfaces/GameConfig.hpp"
 #include "Interfaces/MapInterface.hpp"
 #include "Scripts/ScriptManager.hpp"
-
-#include <cstdio>
-#include <vector>
+#include "test.hpp"
 
 namespace {
 
