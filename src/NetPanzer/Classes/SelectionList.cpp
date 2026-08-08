@@ -83,7 +83,12 @@ bool SelectionList::selectBounded(iRect bounds, bool addunits) {
     // have to verify that we don't put the already selected units again
     unit_list.insert(unit_list.end(), tempunits.begin(), tempunits.end());
     std::sort(unit_list.begin(), unit_list.end());
-    std::unique(unit_list.begin(), unit_list.end());
+    // std::unique only shuffles the duplicates to the end and returns the new
+    // logical end; it does not shorten the container. Discarding that
+    // iterator left every duplicate in place, so adding an already-selected
+    // unit to the selection listed it twice.
+    unit_list.erase(std::unique(unit_list.begin(), unit_list.end()),
+                    unit_list.end());
   }
 
   select();

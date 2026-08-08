@@ -99,7 +99,9 @@ int main(int argc, char *argv[]) {
       unpacked.getPitch(), 0, 0, 0, 0);
 
   if (!surf) {
-    printf("surface is null! we will die.");
+    // It said "we will die" and then carried on to dereference surf anyway.
+    printf("surface is null: %s\n", SDL_GetError());
+    return 1;
   }
 
   Palette::loadACT(palettefile);

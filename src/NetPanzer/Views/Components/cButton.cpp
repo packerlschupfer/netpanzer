@@ -110,7 +110,12 @@ void cButton::reset() {
 // SET NAME
 //---------------------------------------------------------------------------
 void cButton::setName(const char *buttonName) {
+  // The check used to run after strdup and test the argument rather than the
+  // result: a null argument was already dereferenced by then, and an actual
+  // allocation failure went unnoticed.
+  if (buttonName == 0) throw Exception("ERROR: button name is null");
+
   name = strdup(buttonName);
-  if (buttonName == 0)
+  if (name == 0)
     throw Exception("ERROR: Unable to allocate button name: %s", buttonName);
 }  // end SET NAME
