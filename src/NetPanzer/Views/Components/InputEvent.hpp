@@ -37,7 +37,9 @@ class InputEvent {
   enum { META_MASK = (1U << 6) };
   enum { SHIFT_MASK = (1U << 7) };
 
-  InputEvent() {}
+  // Every is*Down() query masks against modifiers, so an event built
+  // without one reported random modifier keys as held.
+  InputEvent() : modifiers(0) {}
   ~InputEvent() {}
 
   inline int isShiftDown() { return modifiers & SHIFT_MASK; }

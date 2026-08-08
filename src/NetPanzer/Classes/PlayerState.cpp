@@ -91,6 +91,9 @@ PlayerState::PlayerState()
       down_last_ping(0),
       down_avg_ping(0),
       temp_time(0) {
+  // Assigned here rather than in the list above to keep the initialisation
+  // order matching the declaration order.
+  muted = false;
   autokick.reset();
 }
 

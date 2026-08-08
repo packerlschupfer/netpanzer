@@ -26,7 +26,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 // for atoi for now
 #include <stdlib.h>
 
-PlayerUnitConfig::PlayerUnitConfig() {}
+PlayerUnitConfig::PlayerUnitConfig() {
+  // initialize() fills these in, but it is called separately from
+  // construction, so anything reading them in between saw garbage.
+  max_allowed_units = 0;
+  unit_color = 0;
+}
 
 void PlayerUnitConfig::initialize() {
   max_allowed_units = GameConfig::game_maxunits / GameConfig::game_maxplayers;

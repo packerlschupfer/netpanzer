@@ -64,6 +64,7 @@ void cInputFieldString::setString(const std::string &string) {
 void cInputFieldString::reset() {
   string = 0;
   maxCharCount = 0;
+  maxWidth = 0;
 }  // end reset
 
 ////////////////////////////////////////////////////////////////////////////
@@ -124,6 +125,7 @@ void cInputField::reset() {
   textaction = 0;
   strDisplayStart = 0;
   insertMode = true;
+  maxWidth = 0;
 }  // end reset
 
 void cInputField::resetString() {

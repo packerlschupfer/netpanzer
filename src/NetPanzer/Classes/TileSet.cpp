@@ -32,6 +32,15 @@ TileSet::TileSet() {
   tile_data = 0;
   tile_set_loaded = false;
   tile_count = 0;
+  // tile_size and the header feed getTileXsize()/getTileYsize(), which the
+  // map geometry is derived from; the partition_load_* fields track a
+  // resumable load. All were left uninitialised until a set was loaded.
+  tile_size = 0;
+  memset(&tile_set_info, 0, sizeof(tile_set_info));
+  partition_load_fhandle = 0;
+  partition_load_partition_count = 0;
+  partition_load_tile_index = 0;
+  partition_load_mapped_index = 0;
 }
 
 TileSet::~TileSet() {

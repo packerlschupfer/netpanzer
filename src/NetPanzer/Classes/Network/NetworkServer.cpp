@@ -35,7 +35,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 NetworkServer *SERVER = 0;
 
 NetworkServer::NetworkServer() : NetworkInterface(), socket(0) {
-  // nothing
+  // net_packet is the scratch buffer every outgoing packet is assembled in.
+  // Clearing it means a packet that does not fill its payload sends zeros
+  // rather than leftovers from this process's memory.
+  memset(&net_packet, 0, sizeof(net_packet));
 }
 
 NetworkServer::~NetworkServer() {

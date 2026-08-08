@@ -18,6 +18,8 @@
 
 #include "Interfaces/ChatInterface.hpp"
 
+#include <string.h>
+
 #include "2D/Color.hpp"
 #include "Classes/Network/NetworkClient.hpp"
 #include "Classes/Network/NetworkServer.hpp"
@@ -54,6 +56,10 @@ class ChatMesgRequest : public NetMessage {
     message_class = _net_message_class_chat;
     message_id = _net_message_id_chat_mesg_req;
     message_scope = _chat_mesg_scope_all;
+    // The sibling chat message struct clears its text buffer here; this one
+    // did not, so any part of the 150 bytes left unwritten was whatever the
+    // memory happened to hold.
+    memset(message_text, 0, sizeof(message_text));
   }
 
   int getTextLen(size_t size) const { return size - CHATREQUEST_HEADER_LEN; }

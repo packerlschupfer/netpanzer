@@ -27,6 +27,7 @@ SmolderParticleSystem2D::SmolderParticleSystem2D(const fXYZ &pos,
                                                  PUFF_TYPE particleType)
     : ParticleSystem2D(pos, 0) {
   waitTime = 0.0f;
+  waitDiff = 0.0f;
 
   iRect bounds(emitBounds);
 

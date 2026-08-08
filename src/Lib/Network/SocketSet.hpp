@@ -36,6 +36,9 @@ class SocketSet : public NoCopy {
     maxfd = 0;
     readset_ptr = 0;
     writeset_ptr = 0;
+    // Only ever assigned when select() fails, so getError() before a failure
+    // used to return whatever was on the stack.
+    select_error = 0;
   }
 
   /** add a socket to the set that should be watched */

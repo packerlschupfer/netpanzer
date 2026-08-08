@@ -33,6 +33,12 @@ void Component::reset() {
   enabled = true;
   visible = true;
   parent = 0;
+  // next/prev link components into their parent's list and dirty drives
+  // redraw; parent was already cleared here but these three were not, so a
+  // fresh Component started with garbage links.
+  next = 0;
+  prev = 0;
+  dirty = true;
   surface.free();
 
 }  // end Component::reset

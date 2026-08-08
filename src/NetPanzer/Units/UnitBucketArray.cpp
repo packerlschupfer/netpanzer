@@ -23,6 +23,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 UnitBucketArray::UnitBucketArray() : UnitBucketArrayTemplate() {
   map_x_sample_factor = 0;
   map_y_sample_factor = 0;
+  // The remaining geometry fields were left to chance; they are all set by
+  // initialize(), but a bucket array that is queried before then used to
+  // compute indices from garbage.
+  pixel_x_sample_factor = 0;
+  pixel_y_sample_factor = 0;
+  map_size_x = 0;
+  map_size_y = 0;
 }
 
 UnitBucketArray::~UnitBucketArray() {}

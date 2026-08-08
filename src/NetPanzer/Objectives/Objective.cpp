@@ -38,6 +38,11 @@ Objective::Objective(ObjectiveID id, iXY location, BoundBox area) {
   this->location = location;
   capture_area = area;
   occupying_player = 0;
+  // name is shown in the UI and outpost_state drives capture logic; both are
+  // set later by the objective list loader, so they used to spend the gap
+  // holding whatever was on the heap.
+  memset(name, 0, sizeof(name));
+  outpost_state = 0;
 
   MapInterface::pointXYtoMapXY(location, outpost_map_loc);
   selection_box.max = location + iXY(64, 32);
