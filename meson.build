@@ -5,8 +5,12 @@ project(
   meson_version : '>= 0.59.0',
   default_options: [
     'warning_level=2',
-    'cpp_std=c++17',
-    'b_sanitize=address,undefined',
+    'cpp_std=c++20',
+    # Sanitizers are opt-in, not opt-out: a plain "meson setup" must produce
+    # the build we ship. Enable them explicitly with
+    #   -Db_sanitize=address,undefined
+    # which CI does for the Linux native job. b_lundef stays disabled because
+    # the sanitizer runtimes need it when that option is turned on.
     'b_lundef=false',
     ]
   )
