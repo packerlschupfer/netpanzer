@@ -64,11 +64,10 @@ directory itself, not at the source root:
 
     export NETPANZER_DATADIR=$PWD/data
 
-Note that `meson test` does not apply the `meson devenv` environment, so the
-tests need it too. Either run them from inside `meson devenv`, or wrap the
-command:
+The test suite sets `NETPANZER_DATADIR` for itself, so it does not need the
+`meson devenv` environment:
 
-    meson devenv -C _build meson test --suite=netpanzer
+    meson test -C _build --suite=netpanzer
 
 To build netpanzer:
 
@@ -112,8 +111,18 @@ Common options to give to 'configure' before creating a release or before
 installing:
 
     -Dbuildtype=release
-    -Db_sanitize=none
     -Db_prefix=/usr (on Windows this will be different)
+
+### Sanitizers
+
+AddressSanitizer and UndefinedBehaviorSanitizer are **not** enabled by default,
+so a plain `meson setup` gives you the build we ship. Turn them on when you are
+chasing a memory bug:
+
+    -Db_sanitize=address,undefined
+
+Expect roughly a 2-4x slowdown with them on, so turn them off again before
+measuring anything.
 
 ## Tests
 

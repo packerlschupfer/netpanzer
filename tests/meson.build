@@ -2,7 +2,10 @@ test_cases = [
   '../src/Lib/package',
   '../src/Lib/2D/CachedFontRenderer',
   '../src/Lib/Util/FileSystem',
-  '../src/NetPanzer/Particles/Particle2D'
+  '../src/NetPanzer/Particles/Particle2D',
+  '../src/NetPanzer/Classes/Network/NetMessageEncoder',
+  '../src/Lib/ArrayUtil/BitArray',
+  '../src/NetPanzer/Classes/AI/Astar'
   ]
 
 fs = import('fs')
@@ -28,7 +31,13 @@ foreach case : test_cases
     'test_' + fs.name(case),
     exe,
     env: [
-      # 'NETPANZER_DATADIR="@0@"'.format(meson.project_source_root())
+      # "meson test" does not apply the "meson devenv" environment, so without
+      # this the data-dependent tests fail for anyone who has not read
+      # BUILD.md. Note this points at the "data" directory itself, not at the
+      # source root.
+      'NETPANZER_DATADIR=@0@'.format(
+        join_paths(meson.project_source_root(), 'data')
+        )
       ]
     )
 endforeach

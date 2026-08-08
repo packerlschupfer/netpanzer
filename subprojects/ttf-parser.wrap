@@ -2,4 +2,7 @@
 directory=ttf-parser
 url=https://github.com/RazrFalcon/ttf-parser.git
 depth=1
-revision=master
+# Pinned to a tag rather than a branch: "revision=master" made the build
+# non-reproducible, since an upstream push changed the resulting binary with
+# no corresponding commit here.
+revision=v0.25.1

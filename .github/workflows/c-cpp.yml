@@ -37,6 +37,12 @@ jobs:
           - name: with-lto
             ubuntu: latest
             options: '-Db_lto=true'
+          # Sanitizers used to be in the project's default_options, which meant
+          # every build including releases paid for them. They are opt-in now,
+          # so one job has to ask for them explicitly.
+          - name: sanitizers
+            ubuntu: latest
+            options: '-Db_sanitize=address,undefined'
           - name: data-install-test
             ubuntu: 22.04
           - name: no-deps
@@ -132,10 +138,10 @@ jobs:
       run: |
         MESON_OPTS="$MESON_OPTS -Dprefix=$INST_PREFIX_DIR -Dnls=$want_nls"
         if [ -n "${{ matrix.cross-file }}" ]; then
-          # ASAN libs for other architectures won't be available (unless we use
-          # emulation or install an appropriate toolchain so we disable sanitize
+          # Sanitizers are off by default now, so nothing to disable here; the
+          # ASAN runtime for other architectures would not be available anyway.
           # https://github.com/google/sanitizers/wiki/AddressSanitizer
-          MESON_OPTS="$MESON_OPTS --cross-file ${{ matrix.cross-file }} -Db_sanitize=none"
+          MESON_OPTS="$MESON_OPTS --cross-file ${{ matrix.cross-file }}"
         fi
         ./setup-build.sh $MESON_OPTS ${{ matrix.options }}
 
