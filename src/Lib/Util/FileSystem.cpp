@@ -52,10 +52,14 @@ void initialize(const char* argv0, const char* application) {
     char* mkdir = new char[strlen(application) + 2];
     sprintf(mkdir, ".%s", application);
     if (!PHYSFS_setWriteDir(userdir) || !PHYSFS_mkdir(mkdir)) {
+      // Build the message while writedir is still alive. It used to be
+      // deleted first and then formatted into the exception, reading freed
+      // memory on the way out.
+      Exception failure("failed creating configuration directory: '%s': %s",
+                        writedir, getErrStr());
       delete[] writedir;
       delete[] mkdir;
-      throw Exception("failed creating configuration directory: '%s': %s",
-                      writedir, getErrStr());
+      throw failure;
     }
     delete[] mkdir;
 

@@ -1004,7 +1004,18 @@ void View::drawHighlightedButton(Surface &clientArea) {
 
   if (highlightedButton < 0) {
     return;
-  } else if (buttons[highlightedButton]->topSurface.getFrameCount() < 2) {
+  }
+
+  // The bounds check used to sit further down and read "> buttons.size()",
+  // which let highlightedButton == buttons.size() through and indexed one
+  // past the end. It was also below the first use of the index, so an
+  // out-of-range value was dereferenced before it could be rejected.
+  // setHighlightedButton already gets this right with ">=".
+  if (highlightedButton >= (int)buttons.size()) {
+    throw Exception("ERROR: highlightedButton >= buttons.size()");
+  }
+
+  if (buttons[highlightedButton]->topSurface.getFrameCount() < 2) {
     cButton *button = buttons[highlightedButton];
     clientArea.drawRect(
         iRect(button->getBounds().min.x, button->getBounds().min.y,
@@ -1015,10 +1026,6 @@ void View::drawHighlightedButton(Surface &clientArea) {
 
   if (pressedButton == highlightedButton) {
     return;
-  }
-
-  if (highlightedButton > (int)buttons.size()) {
-    throw Exception("ERROR: highlightedButton > butons.getCount()");
   }
 
   // Change to the highlight button frame.

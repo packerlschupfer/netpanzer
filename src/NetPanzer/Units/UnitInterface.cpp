@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Units/UnitOpcodeDecoder.hpp"
 #include "Units/UnitProfileInterface.hpp"
 #include "Units/Vehicle.hpp"
+#include "Util/Exception.hpp"
 #include "Util/Log.hpp"
 #include "Util/Timer.hpp"
 
@@ -285,8 +286,14 @@ UnitBase* UnitInterface::newUnit(unsigned short unit_type, const iXY& location,
                        speed_rate_nl, speed_factor_nl, reload_time_nl,
                        max_hit_points_nl, hit_points_nl, damage_factor_nl,
                        weapon_range_nl, defend_range_nl);
-  } else {  // XXX change for a error window
-    assert("unknown unit_type" == 0);
+  } else {
+    // unit_type arrives straight off the network, so an out-of-range value is
+    // reachable from a malformed or hostile packet. The assert that used to
+    // be here fired only in debug builds; otherwise this fell through and
+    // returned null, which both callers dereference immediately. They already
+    // wrap the call in try/catch and log the failure, so throwing turns a
+    // null dereference into an ignored bad packet.
+    throw Exception("unknown unit type %u", unit_type);
   }
 
   return unit;
@@ -1142,8 +1149,12 @@ void UnitInterface::unitCreateMessageFull(const NetMessage* net_message) {
                          unitpos, body_angle, turret_angle, orientation,
                          speed_rate, speed_factor, reload_time, max_hit_points,
                          hit_points, damage_factor, weapon_range, defend_range);
-    } else {  // XXX change for a error window
-      assert("unknown unit_type" == 0);
+    } else {
+      // Same shape as newUnit(): unit_type comes off the wire, the assert
+      // that was here only fired in debug builds, and addNewUnit() below
+      // dereferences unit unconditionally. This function already runs inside
+      // a try/catch that logs and drops the message.
+      throw Exception("unknown unit type %u", unit_type);
     }
 
     addNewUnit(unit);
