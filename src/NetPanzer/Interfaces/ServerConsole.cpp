@@ -109,13 +109,26 @@ void ServerConsole::run() {
   while (running) {
     char buf[256];
 
-    std::cout << "netpanzer-server: ";
+    std::cout << "netpanzer-server: " << std::flush;
 
-    if (fgets(buf, sizeof(buf), stdin) != NULL) {
-      // eliminated \n at the end
-      buf[strlen(buf) - 1] = '\0';
-
-      executeCommand(buf);
+    if (fgets(buf, sizeof(buf), stdin) == NULL) {
+      // There is no console to read from: the server is running as a service,
+      // in a container, under nohup, or stdin was closed. Without this the
+      // loop spins on EOF forever, pegging a core and writing the prompt
+      // without limit. Leave the console thread; the server itself keeps
+      // running.
+      std::cout << "\nNo console input available, stopping console thread.\n"
+                << std::flush;
+      running = false;
+      break;
     }
+
+    // Trim the newline, if there is one. fgets does not leave one when the
+    // line filled the buffer, and indexing at strlen()-1 unconditionally
+    // writes out of bounds when the line is empty.
+    const size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '\n') buf[len - 1] = '\0';
+
+    executeCommand(buf);
   }
 }
