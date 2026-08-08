@@ -52,6 +52,7 @@ class CachedFontRenderer {
   static void cleanup();
 
   static void test_openFont(void);
+  static void test_cacheKey(void);
 };
 
 #endif  // NETPANZER_FONTPOOL_HPP

@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Units/UnitProfileInterface.hpp"
 #include "Util/Exception.hpp"
 #include "Util/FileSystem.hpp"
+#include "Util/FrameBench.hpp"
 #include "Util/Log.hpp"
 #include "Weapons/ProjectileInterface.hpp"
 
@@ -166,13 +167,24 @@ void BaseGameManager::shutdownSubSystems() {
 }
 //-----------------------------------------------------------------
 bool BaseGameManager::mainLoop() {
+  FrameBench::beginTick();
+
   TimerInterface::start();
   inputLoop();
+  FrameBench::endPhase(FrameBench::PHASE_INPUT);
+
   graphicsLoop();
+  FrameBench::endPhase(FrameBench::PHASE_GRAPHICS);
+
   simLoop();
+  FrameBench::endPhase(FrameBench::PHASE_SIM);
 
   sleeping();
+  FrameBench::endPhase(FrameBench::PHASE_SLEEP);
+
   TimerInterface::update();
+
+  if (!FrameBench::endTick()) return false;
 
   return running;
 }
@@ -183,11 +195,24 @@ bool BaseGameManager::mainLoop() {
 void BaseGameManager::sleeping() {
   static Uint32 nextTime = 0;
 
+  if (FrameBench::skipSleep()) return;
+
   Uint32 now = SDL_GetTicks();
   if (now < nextTime) {
     SDL_Delay(nextTime - now);
   }
   nextTime += TIMEINTERVAL;
+
+  // Resynchronise if we have fallen behind. Without this, a single stall (map
+  // load, alt-tab, a machine that cannot hold the tick rate) leaves nextTime
+  // permanently behind the clock, so the branch above never fires again and
+  // the loop spins with no sleep at all until the accumulated debt is burned
+  // off at full speed. Clamping degrades to "run at the real frame rate"
+  // instead.
+  now = SDL_GetTicks();
+  if (nextTime < now) {
+    nextTime = now;
+  }
 }
 
 //-----------------------------------------------------------------

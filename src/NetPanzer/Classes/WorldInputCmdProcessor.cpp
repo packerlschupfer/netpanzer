@@ -76,6 +76,10 @@ ObjectiveID WorldInputCmdProcessor::selected_objective_id = 0;
 WorldInputCmdProcessor::WorldInputCmdProcessor() {
   keyboard_input_mode = _keyboard_input_mode_command;
 
+  current_selection_list_index = 0;
+  enter_key_hit_count = 0;
+  left_button_hold_action_complete = false;
+
   selection_box_active = false;
   outpost_goal_selection = OBJECTIVE_NONE;
   previous_manual_control_state = false;
@@ -140,8 +144,10 @@ void WorldInputCmdProcessor::updateScrollStatus(const iXY &mouse_pos) {
         WorldViewInterface::scroll_right(x_delta * 4);
         WorldViewInterface::scroll_down(y_delta * 4);
 
-        SDL_WarpMouseInWindow(Screen->getWindow(), right_mouse_scroll_pos.x,
-                              right_mouse_scroll_pos.y);
+        // right_mouse_scroll_pos is in game coordinates, like everything else
+        // here, so it has to go through warpMouse rather than straight to
+        // SDL_WarpMouseInWindow.
+        Screen->warpMouse(right_mouse_scroll_pos.x, right_mouse_scroll_pos.y);
 
         right_mouse_scrolled_pos.x = mouse_pos.x;
         right_mouse_scrolled_pos.y = mouse_pos.y;

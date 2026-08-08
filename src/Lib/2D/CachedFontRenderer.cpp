@@ -21,8 +21,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "CachedFontRenderer.hpp"
 
-#include <string>
+#include <cstdio>
+#include <cstring>
 #include <optional>
+#include <string>
 
 #include "Interfaces/MenuConfig.hpp"
 #include "Util/FileSystem.hpp"
@@ -60,10 +62,23 @@ std::string CachedFontRenderer::create_cache_key(const char *text,
                                                  SDL_Color blendColor,
                                                  bool wrapped,
                                                  int wrapLength) {
-  std::string result = std::string(text);
-  result += std::to_string(color.r) + std::to_string(color.g) + std::to_string(color.b);
-  result += std::to_string(blendColor.r) + std::to_string(blendColor.g) + std::to_string(blendColor.b);
-  result += std::to_string(wrapped) + std::to_string(wrapLength);
+  // Fixed-width hex behind a separator, for two reasons. It is one
+  // allocation instead of the nine that a chain of std::to_string costs on
+  // every lookup, hit or miss; and it cannot collide. Concatenating decimal
+  // numbers made rgb(1,23,4) and rgb(12,3,4) both spell "1234", so two
+  // different colours could share one cached surface and the wrong one would
+  // be drawn.
+  char suffix[32];
+  const int suffix_len =
+      snprintf(suffix, sizeof(suffix), "|%02X%02X%02X|%02X%02X%02X|%d|%d",
+               color.r, color.g, color.b, blendColor.r, blendColor.g,
+               blendColor.b, wrapped ? 1 : 0, wrapLength);
+
+  const size_t text_len = strlen(text);
+  std::string result;
+  result.reserve(text_len + (suffix_len > 0 ? (size_t)suffix_len : 0));
+  result.assign(text, text_len);
+  if (suffix_len > 0) result.append(suffix, (size_t)suffix_len);
   return result;
 }
 
@@ -135,6 +150,48 @@ void CachedFontRenderer::test_openFont(void) {
   return;
 }
 
+/**
+ * The cache key has to be injective: two draws that differ in any way must
+ * not share a cached surface, or one of them is drawn in the wrong colour.
+ * The original key concatenated decimal numbers with no separators, so
+ * several genuinely different draws collapsed onto the same string.
+ */
+void CachedFontRenderer::test_cacheKey(void) {
+  const SDL_Color black = {0, 0, 0, 255};
+
+  // rgb(1,23,4) and rgb(12,3,4) both spelled "1234" under the old scheme.
+  const SDL_Color a = {1, 23, 4, 255};
+  const SDL_Color b = {12, 3, 4, 255};
+  assert(create_cache_key("hp", a, black, false, 0) !=
+         create_cache_key("hp", b, black, false, 0));
+
+  // The text ran straight into the numbers, so a trailing digit in the text
+  // was indistinguishable from a leading digit of the first colour channel.
+  const SDL_Color c2 = {2, 3, 4, 255};
+  const SDL_Color c12 = {12, 3, 4, 255};
+  assert(create_cache_key("a1", c2, black, false, 0) !=
+         create_cache_key("a", c12, black, false, 0));
+
+  // The blend colour has to separate keys too, not just the foreground.
+  assert(create_cache_key("x", a, a, false, 0) !=
+         create_cache_key("x", a, b, false, 0));
+
+  // Wrapping and wrap length are part of the rendered result.
+  assert(create_cache_key("x", a, black, false, 0) !=
+         create_cache_key("x", a, black, true, 0));
+  assert(create_cache_key("x", a, black, true, 10) !=
+         create_cache_key("x", a, black, true, 100));
+
+  // Same inputs must always give the same key, or nothing ever hits.
+  assert(create_cache_key("Player 1", a, b, true, 42) ==
+         create_cache_key("Player 1", a, b, true, 42));
+
+  // Empty text is a legal draw and must not read out of bounds.
+  assert(!create_cache_key("", a, black, false, 0).empty());
+
+  return;
+}
+
 int main(int argc, char *argv[]) {
   (void)argc;
 
@@ -145,6 +202,7 @@ int main(int argc, char *argv[]) {
   ScriptManager::initialize();
   MenuConfig::loadConfig();
   CachedFontRenderer::test_openFont();
+  CachedFontRenderer::test_cacheKey();
 
   return 0;
 }

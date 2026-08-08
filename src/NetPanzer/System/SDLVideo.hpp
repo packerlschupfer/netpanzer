@@ -35,6 +35,10 @@ class SDLVideo {
   virtual ~SDLVideo();
 
   bool setVideoMode(int width, int height, int bpp, bool fullscreen);
+  /// Warp the cursor to a point in game coordinates, converting to window
+  /// coordinates on the way. Always use this rather than
+  /// SDL_WarpMouseInWindow, which does not know about the logical size.
+  void warpMouse(int logical_x, int logical_y);
   void setPalette(SDL_Color* color);
   SDL_Surface* getSurface();
   SDL_Window* getWindow();

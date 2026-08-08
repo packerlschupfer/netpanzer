@@ -158,8 +158,14 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
     SDL_DestroyTexture(texture);
   }
 
+  // A streaming texture, created once per video mode and then written in
+  // place every frame. The previous code called SDL_CreateTextureFromSurface
+  // in render(), which allocated and freed a full-screen GPU texture on every
+  // single frame.
   LOGGER.debug("Creating new render texture.");
-  texture = SDL_CreateTextureFromSurface(renderer, surface);
+  texture =
+      SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+                        SDL_TEXTUREACCESS_STREAMING, new_width, new_height);
 
   if (texture == nullptr) {
     LOGGER.warning("Couldn't create render texture: %s", SDL_GetError());
@@ -171,13 +177,27 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   // monitor resolution.
   LOGGER.debug("Setting render hints.");
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-  // TODO add option for letter boxing.
-  //  Currently, this breaks right mouse movement w/ SDL_WarpMouseInWindow in fullscreen
-//  LOGGER.debug("Setting render logical size.");
-//  const int setLogicalSizeResult = SDL_RenderSetLogicalSize(renderer, new_width, new_height);
-//  if (setLogicalSizeResult < 0) {
-//    LOGGER.warning("Couldn't set logical resolution: %d %d %s", new_width, new_height, SDL_GetError());
-//  }
+
+  // With a logical size set, SDL scales incoming mouse coordinates into the
+  // game's own resolution, so a click lands where the player aimed even when
+  // the window is a different size than video.width/height. Without it the
+  // game read raw window coordinates as if they were surface coordinates,
+  // and every click was off by the scale factor.
+  //
+  // This used to be disabled because it "breaks right mouse movement w/
+  // SDL_WarpMouseInWindow". That is a real interaction, not a reason to give
+  // up the fix: SDL scales the coordinates it *gives* you, but
+  // SDL_WarpMouseInWindow still expects window coordinates. Warping with a
+  // logical coordinate therefore lands somewhere else, and the next motion
+  // event yields a nonsense delta. Every warp below goes through
+  // warpMouse(), which converts back.
+  LOGGER.debug("Setting render logical size.");
+  const int setLogicalSizeResult =
+      SDL_RenderSetLogicalSize(renderer, new_width, new_height);
+  if (setLogicalSizeResult < 0) {
+    LOGGER.warning("Couldn't set logical resolution: %d %d %s", new_width,
+                   new_height, SDL_GetError());
+  }
 
   // let's scare the mouse :)
   // this fixes the mouse cursor stuck to a small region after resolution change
@@ -193,9 +213,26 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   int centerX = new_width / 2;
   int centerY = new_height / 2;
   LOGGER.debug("Warping mouse into window...");
-  SDL_WarpMouseInWindow(window, centerX, centerY);
+  warpMouse(centerX, centerY);
   SDL_SetWindowGrab(window, fullscreen ? SDL_TRUE : SDL_FALSE);
   return true;
+}
+
+void SDLVideo::warpMouse(int logical_x, int logical_y) {
+  if (window == nullptr) return;
+
+  // SDL_RenderSetLogicalSize scales the coordinates SDL reports, but
+  // SDL_WarpMouseInWindow still speaks window coordinates. Callers work in
+  // game coordinates, so convert on the way out or the cursor lands
+  // somewhere else entirely.
+  int window_x = logical_x;
+  int window_y = logical_y;
+  if (renderer != nullptr) {
+    SDL_RenderLogicalToWindow(renderer, (float)logical_x, (float)logical_y,
+                              &window_x, &window_y);
+  }
+
+  SDL_WarpMouseInWindow(window, window_x, window_y);
 }
 
 void SDLVideo::setPalette(SDL_Color *color) {
@@ -206,13 +243,50 @@ SDL_Surface *SDLVideo::getSurface() { return surface; }
 SDL_Window *SDLVideo::getWindow() { return window; }
 
 void SDLVideo::render() {
-  // This mechanism is only about 5-10% slower than SDL_BlitSurface &&
-  // SDL_UpdateWindowSurface. But, it gets us a lot (simpler code, much nicer
-  // rendering and scaling).
-  if (texture != nullptr) {
-    SDL_DestroyTexture(texture);
+  // Going through the renderer rather than SDL_UpdateWindowSurface buys us
+  // simpler code and much nicer scaling. What it must not cost us is a
+  // texture allocation per frame, so the texture is created once in
+  // setVideoMode and the indexed screen surface is expanded into it here.
+  if (texture == nullptr || surface == nullptr) return;
+
+  void *pixels = nullptr;
+  int pitch = 0;
+  if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0) {
+    LOGGER.warning("Couldn't lock render texture: %s", SDL_GetError());
+    return;
   }
-  texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+  // Rebuilt every frame rather than cached: 256 entries is nothing next to a
+  // full screen of pixels, and it keeps this correct no matter who changed
+  // the palette since the last frame.
+  Uint32 lut[256];
+  const SDL_Palette *pal = surface->format->palette;
+  const int color_count = (pal != nullptr) ? pal->ncolors : 0;
+  for (int i = 0; i < 256; i++) {
+    if (i < color_count) {
+      const SDL_Color &c = pal->colors[i];
+      lut[i] =
+          0xFF000000u | ((Uint32)c.r << 16) | ((Uint32)c.g << 8) | (Uint32)c.b;
+    } else {
+      lut[i] = 0xFF000000u;
+    }
+  }
+
+  const int width = surface->w;
+  const int height = surface->h;
+  const Uint8 *src = (const Uint8 *)surface->pixels;
+  Uint8 *dst = (Uint8 *)pixels;
+
+  for (int y = 0; y < height; y++) {
+    const Uint8 *src_row = src + (size_t)y * surface->pitch;
+    Uint32 *dst_row = (Uint32 *)(dst + (size_t)y * pitch);
+    for (int x = 0; x < width; x++) {
+      dst_row[x] = lut[src_row[x]];
+    }
+  }
+
+  SDL_UnlockTexture(texture);
+
   SDL_RenderClear(renderer);
   SDL_RenderCopy(renderer, texture, nullptr, nullptr);
   SDL_RenderPresent(renderer);
