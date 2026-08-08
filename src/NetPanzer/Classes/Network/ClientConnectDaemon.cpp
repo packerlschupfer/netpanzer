@@ -422,7 +422,13 @@ void ClientConnectDaemon::connectFsm(const NetMessage *message) {
         GameManager::startClientGameSetup(message, &result_code);
 
         if (result_code == _mapload_result_no_map_file) {
-          sprintf(str_buf, "MAP %s NOT FOUND!", game_setup->map_name);
+          // map_name is a fixed 32-byte field straight off the wire and a
+          // hostile server need not terminate it. Plain %s would read past
+          // the field until it happened to find a NUL, overflowing the
+          // 128-byte stack buffer; the precision bounds the read to the
+          // field, and snprintf bounds the write.
+          snprintf(str_buf, sizeof(str_buf), "MAP %.*s NOT FOUND!",
+                   (int)sizeof(game_setup->map_name), game_setup->map_name);
           LoadingView::append(str_buf);
           connection_state = _connect_state_connect_failure;
           failure_display_timer.reset();

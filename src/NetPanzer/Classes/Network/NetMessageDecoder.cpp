@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 NetMessageDecoder::NetMessageDecoder() {
   memset(&decode_message, 0, sizeof(decode_message));
+  // The buffer was cleared but these were not, so a decodeMessage() before
+  // the first setDecodeMessage() did its bounds arithmetic on garbage.
+  size = 0;
+  offset = 0;
 }
 
 NetMessageDecoder::~NetMessageDecoder() {}
@@ -33,6 +37,14 @@ void NetMessageDecoder::setDecodeMessage(const NetMessage* message,
   if (size > sizeof(decode_message)) {
     LOGGER.warning("Multimessage with wrong size!");
     memset(&decode_message, 0, sizeof(decode_message));
+    // The buffer is now empty, so the length describing it has to be too.
+    // Leaving the previous message's size and offset in place meant the next
+    // decodeMessage() walked a zeroed buffer using a stale length -- and on
+    // the first packet, an uninitialised one. The size here comes off the
+    // network, so this path is reachable by anyone who sends an oversized
+    // multi-message.
+    this->size = 0;
+    offset = 0;
     return;
   }
 
@@ -42,7 +54,16 @@ void NetMessageDecoder::setDecodeMessage(const NetMessage* message,
 }
 
 Uint16 NetMessageDecoder::decodeMessage(NetMessage** message) {
-  if (sizeof(NetMessage) + offset >= size) {
+  // Everything past the multi-message header is payload. This arrives
+  // straight off the network, so every bound below has to hold for a packet
+  // that is lying about its contents.
+  const size_t data_len =
+      (size > sizeof(NetMessage)) ? size - sizeof(NetMessage) : 0;
+
+  // The two-byte length prefix must itself be inside the buffer before it can
+  // be read. The old test stopped only once offset reached data_len, so a
+  // packet ending with a single spare byte was read two bytes wide.
+  if (offset + sizeof(Uint16) > data_len) {
     return 0;  // no more messages
   }
 
@@ -50,9 +71,10 @@ Uint16 NetMessageDecoder::decodeMessage(NetMessage** message) {
   memcpy(&mlen_value, decode_message.data + offset, sizeof(Uint16));
   Uint16 msg_len = ltoh16(mlen_value);
 
-  if (msg_len > size - sizeof(NetMessage) - offset) {
+  // The claimed length has to fit in what remains *after* the prefix.
+  if (msg_len > data_len - offset - sizeof(Uint16)) {
     LOGGER.warning("Malformed Multimessage!!");
-    return false;
+    return 0;
   }
 
   *message = (NetMessage*)(decode_message.data + offset + sizeof(Uint16));
