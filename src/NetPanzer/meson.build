@@ -142,7 +142,8 @@ src_basename = [
   'FileSystem.cpp',
   'BresenhamLine.cpp',
   'Exception.cpp',
-  'StringUtil.cpp'
+  'StringUtil.cpp',
+  'FrameBench.cpp'
 ]
 foreach file : src_basename
   src += [join_paths('../Lib/Util', file)]

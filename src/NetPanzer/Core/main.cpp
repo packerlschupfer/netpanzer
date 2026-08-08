@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 
 #include "Util/Exception.hpp"
+#include "Util/FrameBench.hpp"
 #include "Util/Log.hpp"
 // #include "Util/Exception.hpp"
 #include "2D/Palette.hpp"
@@ -277,9 +278,14 @@ BaseGameManager* initialise(int argc, char** argv) {
   // for the dedicated server and the bot
   if (dedicated_option.value() || bot_option.value().size() > 0) {
     AllocConsole();
-    freopen("CON", "w", stdout);
-    freopen("CON", "w", stderr);
-    freopen("CON", "r", stdin);
+    // Nothing useful to do if a redirect fails -- the console we would report
+    // it on is the thing that did not work -- but the results have to be
+    // consumed rather than silently dropped.
+    if (freopen("CON", "w", stdout) == NULL ||
+        freopen("CON", "w", stderr) == NULL ||
+        freopen("CON", "r", stdin) == NULL) {
+      LOGGER.warning("Couldn't attach the console to stdio.");
+    }
   }
 #endif
 
@@ -371,6 +377,7 @@ int main(int argc, char *argv[]) {
   bindtextdomain(Package::getBinName().c_str(), Package::getLocaleDir().c_str());
   textdomain(Package::getBinName().c_str());
 #endif
+  FrameBench::initialize();
   network::NetworkManager::initialize();
   ScriptManager::initialize();
 
