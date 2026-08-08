@@ -17,6 +17,11 @@ subprojects/**
 !subprojects/packagecache/
 !subprojects/packagecache/**
 
+# Meson builds we maintain for subprojects that ship none of their own.
+# These are source, not extracted or downloaded content.
+!subprojects/packagefiles/
+!subprojects/packagefiles/**
+
 # wrap files required
 !subprojects/**/*.wrap
 /subprojects/libpng.wrap
