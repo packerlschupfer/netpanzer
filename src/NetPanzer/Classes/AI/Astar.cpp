@@ -16,7 +16,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef TEST_LIB
+
 #include "Astar.hpp"
+
+#include <string.h>
 
 #include <functional>
 
@@ -26,7 +30,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #define HEURISTIC_WEIGHT 10
 
-Astar::Astar() { node_list = 0; }
+Astar::Astar() {
+  node_list = 0;
+
+  // Everything below used to be left uninitialised, and one of these fields
+  // decides whether the search writes into astar_set_array -- a BitArray that
+  // is only ever allocated by setDebugMode(). If sample_set_array_flag
+  // happened to come up non-zero, initializePath() set start_sampling_flag,
+  // and process_succ() then called setBit() through a null pointer: a
+  // segfault during pathfinding, dependent on whatever the memory happened to
+  // hold. It reproduces as an immediate crash in a release build while an
+  // AddressSanitizer build, which poisons that memory differently, runs
+  // clean.
+  node_index = 0;
+  node_list_size = 0;
+  free_list_ptr = 0;
+  dynamic_node_management_flag = false;
+
+  best_node = 0;
+
+  sample_set_array_flag = false;
+  start_sampling_flag = false;
+  debug_mode_flag = false;
+
+  steps = 0;
+  step_limit = 0;
+  total_steps = 0;
+  total_pathing_time = 0.0f;
+  heuristic_weight = HEURISTIC_WEIGHT;
+  succ_swap_flag = false;
+  path_type_flag = 0;
+  ini_flag = false;
+
+  path_request_ptr = 0;
+  path_merge_type = 0;
+
+  // The two node structs are plain aggregates and were left as-is until a
+  // search populated them.
+  memset(&current_node, 0, sizeof(current_node));
+  memset(&goal_node, 0, sizeof(goal_node));
+}
+
+Astar::~Astar() {
+  // initializeNodeList() allocates node_list and there was no destructor to
+  // release it. The shipped game only ever builds the two static pathers, so
+  // this leaked once at shutdown rather than growing -- but it also meant any
+  // Astar with automatic or dynamic storage leaked 192 KB per instance.
+  delete[] node_list;
+  node_list = 0;
+}
 
 void Astar::initializeAstar(unsigned long node_list_size,
                             unsigned long step_limit) {
@@ -429,3 +481,256 @@ void Astar::sampleSetArrays() {
 }
 
 BitArray *Astar::getSampledSetArrays() { return &astar_set_array; }
+
+#else
+
+#include "test.hpp"
+
+#include "Astar.hpp"
+#include "Classes/AI/PathList.hpp"
+#include "Classes/Network/NetworkState.hpp"
+#include "Interfaces/GameConfig.hpp"
+#include "Interfaces/MapInterface.hpp"
+#include "Scripts/ScriptManager.hpp"
+
+#include <cstdio>
+#include <vector>
+
+namespace {
+
+/// A path request is answered over several calls, the way PathScheduler
+/// spreads the work across ticks. The bound is a test harness detail: it
+/// turns "the search never terminates" into a failure instead of a hang.
+bool runToCompletion(Astar& astar, PathRequest& request, int* result_code) {
+  const int MAX_ITERATIONS = 200000;
+  for (int i = 0; i < MAX_ITERATIONS; i++) {
+    if (astar.generatePath(&request, _path_merge_front, false, result_code)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool passable(const iXY& loc) {
+  return MapInterface::getMovementValue(loc) != 0xFF;
+}
+
+/// Collect passable tiles spread across the map, so the tests path over real
+/// terrain rather than one hand-picked corner.
+std::vector<iXY> findPassableTiles(size_t wanted) {
+  std::vector<iXY> found;
+  const long w = (long)MapInterface::getWidth();
+  const long h = (long)MapInterface::getHeight();
+
+  // Walk a coarse grid; a diagonal would only ever sample one line of terrain.
+  const long step = 7;
+  for (long y = 1; y < h - 1 && found.size() < wanted; y += step) {
+    for (long x = 1; x < w - 1 && found.size() < wanted; x += step) {
+      const iXY loc(x, y);
+      if (passable(loc)) found.push_back(loc);
+    }
+  }
+  return found;
+}
+
+}  // namespace
+
+/**
+ * The map has to be loaded before any of this means anything; a silently
+ * empty map would make every other assertion below vacuous.
+ */
+static void testMapLoaded(void) {
+  assert(MapInterface::isMapLoaded());
+  assert(MapInterface::getWidth() > 0);
+  assert(MapInterface::getHeight() > 0);
+  printf("  map %zux%zu\n", MapInterface::getWidth(),
+         MapInterface::getHeight());
+  fflush(stdout);
+}
+
+/**
+ * A path between two passable tiles must be found, and the result must be a
+ * real path rather than an empty list reported as success.
+ */
+static void testFindsPath(void) {
+  const std::vector<iXY> tiles = findPassableTiles(64);
+  assert(tiles.size() >= 2);
+
+  Astar astar;
+  astar.initializeAstar(4000, 50);
+
+  const iXY start = tiles.front();
+  const iXY goal = tiles.back();
+
+  PathList path;
+  PathRequest request;
+  UnitID id = 1;
+  iXY s = start, g = goal;
+  request.set(id, s, g, 0, &path, _path_request_full);
+
+  int result_code = -1;
+  assert(runToCompletion(astar, request, &result_code));
+
+  if (result_code == _path_result_success) {
+    // A successful search over distinct tiles must leave steps behind.
+    unsigned long tile = 0;
+    assert(path.popFirst(&tile));
+  } else {
+    // Not every pair on a real map is connected; the only thing that is not
+    // allowed is an undefined answer.
+    assert(result_code == _path_result_goal_unreachable);
+  }
+}
+
+/**
+ * Start equal to goal is a real case -- a unit ordered to where it already
+ * stands -- and must terminate rather than search the whole map.
+ */
+static void testPathToSelf(void) {
+  const std::vector<iXY> tiles = findPassableTiles(1);
+  assert(!tiles.empty());
+
+  Astar astar;
+  astar.initializeAstar(4000, 50);
+
+  PathList path;
+  PathRequest request;
+  UnitID id = 2;
+  iXY s = tiles[0], g = tiles[0];
+  request.set(id, s, g, 0, &path, _path_request_full);
+
+  int result_code = -1;
+  assert(runToCompletion(astar, request, &result_code));
+}
+
+/**
+ * A goal outside the map is reachable from the network: a malformed or
+ * hostile move order carries arbitrary coordinates. The search must
+ * terminate and stay inside its arrays.
+ *
+ * Note what it does *not* assert. An unreachable goal makes the search
+ * expand until the node list is exhausted, and process_succ then does this:
+ *
+ *     if (node == 0) { done = true; goal_reachable = true; // PATCH
+ *
+ * so running out of nodes is reported as _path_result_success with a partial
+ * path towards the goal, not as _path_result_goal_unreachable. That is
+ * deliberate -- the comment says it limits an "unreachable nodes issue", and
+ * units get a partial path instead of refusing to move -- so this test pins
+ * termination and memory safety rather than the result code. Anyone tempted
+ * to tidy that branch up should know the behaviour is load-bearing.
+ */
+static void testGoalOutsideMap(void) {
+  const std::vector<iXY> tiles = findPassableTiles(1);
+  assert(!tiles.empty());
+
+  Astar astar;
+  astar.initializeAstar(4000, 50);
+
+  PathList path;
+  PathRequest request;
+  UnitID id = 3;
+  iXY s = tiles[0];
+  iXY g((long)MapInterface::getWidth() + 500,
+        (long)MapInterface::getHeight() + 500);
+  request.set(id, s, g, 0, &path, _path_request_full);
+
+  int result_code = -1;
+  assert(runToCompletion(astar, request, &result_code));
+  assert(result_code == _path_result_success ||
+         result_code == _path_result_goal_unreachable);
+}
+
+/**
+ * The scheduler reuses one Astar for request after request, so node-list
+ * reset has to leave the searcher in a clean state. Run under
+ * AddressSanitizer this also exercises the open/closed BitArrays, which are
+ * sized from the map dimensions.
+ */
+static void testManyRequestsReuseOneSearcher(void) {
+  const std::vector<iXY> tiles = findPassableTiles(40);
+  assert(tiles.size() >= 4);
+
+  Astar astar;
+  astar.initializeAstar(4000, 50);
+
+  int solved = 0;
+  for (size_t i = 0; i + 1 < tiles.size(); i++) {
+    PathList path;
+    PathRequest request;
+    UnitID id = (UnitID)(100 + i);
+    iXY s = tiles[i], g = tiles[i + 1];
+    request.set(id, s, g, 0, &path, _path_request_full);
+
+    int result_code = -1;
+    assert(runToCompletion(astar, request, &result_code));
+    assert(result_code == _path_result_success ||
+           result_code == _path_result_goal_unreachable);
+    if (result_code == _path_result_success) solved++;
+  }
+
+  // Neighbouring passable tiles on a playable map should mostly connect; if
+  // nothing at all solved, the searcher is broken rather than the terrain.
+  printf("  solved %d of %zu consecutive pairs\n", solved, tiles.size() - 1);
+  fflush(stdout);
+  assert(solved > 0);
+}
+
+/**
+ * The corner tiles are where an under-sized open/closed set shows up first,
+ * because their bit indices land in the final byte of the BitArray.
+ */
+static void testPathsAtMapEdges(void) {
+  const long w = (long)MapInterface::getWidth();
+  const long h = (long)MapInterface::getHeight();
+
+  Astar astar;
+  astar.initializeAstar(4000, 50);
+
+  const iXY corners[] = {iXY(0, 0), iXY(w - 1, 0), iXY(0, h - 1),
+                         iXY(w - 1, h - 1)};
+
+  for (size_t i = 0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+      if (i == j) continue;
+
+      PathList path;
+      PathRequest request;
+      UnitID id = (UnitID)(200 + i * 4 + j);
+      iXY s = corners[i], g = corners[j];
+      request.set(id, s, g, 0, &path, _path_request_full);
+
+      int result_code = -1;
+      assert(runToCompletion(astar, request, &result_code));
+    }
+  }
+}
+
+int main(int argc, char* argv[]) {
+  (void)argc;
+
+  filesystem::initialize(argv[0], "test_Astar");
+  Package::assignDataDir();
+  filesystem::addToSearchPath(Package::getDataDir().c_str());
+
+  ScriptManager::initialize();
+
+  // The server path through startMapLoad reads GameConfig::game_mapstyle and
+  // does not need any tile graphics, which is what makes this runnable with
+  // no window.
+  gameconfig = new GameConfig("/config/server.cfg");
+  NetworkState::status = _network_state_server;
+
+  MapInterface::startMapLoad("maps/Two clans", "/SummerDay", false, 0);
+
+  testMapLoaded();
+  testFindsPath();
+  testPathToSelf();
+  testGoalOutsideMap();
+  testManyRequestsReuseOneSearcher();
+  testPathsAtMapEdges();
+
+  return 0;
+}
+
+#endif
