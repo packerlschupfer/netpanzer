@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Interfaces/GameConfig.hpp"
 #include "Interfaces/GameManager.hpp"
 #include "System/DummySound.hpp"
+#include "System/SDLSound.hpp"
 #include "System/Sound.hpp"
 #include "Util/Exception.hpp"
 #include "Views/Components/Button.hpp"
@@ -440,8 +441,7 @@ void OptionsTemplateView::stateChanged(Component *source) {
     delete sound;
 
     if (checkBoxSoundEnabled->getState()) {
-      // Audio is stubbed while the SDL3_mixer port is outstanding.
-      sound = new DummySound();
+      sound = new SDLSound();
       checkBoxSoundEnabled->setLabel("Enabled");
       if (GameControlRulesDaemon::getGameState()) {
         sound->playTankIdle();

@@ -131,9 +131,16 @@ if not sdl2_ttf_dep.found()
 endif
 deps += sdl2_ttf_dep
 
-# SDL3_mixer is not in wrapdb and its API is a redesign rather than a rename,
-# so audio is stubbed out in this pass and SDLSound is not built. The game
-# falls back to DummySound.
+sdl2_mixer_dep = dependency('sdl3-mixer', required: false)
+if not sdl2_mixer_dep.found()
+  # Not in wrapdb; the meson build lives in subprojects/packagefiles/.
+  sdl2_mixer_dep = dependency(
+    'sdl3_mixer',
+    required: true,
+    fallback: 'sdl3_mixer',
+    default_options: ['default_library=static'])
+endif
+deps += sdl2_mixer_dep
 
 inc_dirs = [include_directories('.')]
 

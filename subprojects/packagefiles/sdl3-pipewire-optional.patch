@@ -17,7 +17,7 @@
    sdl_deps += dependency('wayland-cursor')
 --- a/src/audio/meson.build
 +++ b/src/audio/meson.build
-@@ -7,8 +7,14 @@
+@@ -7,10 +7,25 @@
    cdata.set('SDL_AUDIO_DRIVER_COREAUDIO', 1)
    subdir('coreaudio')
  else
@@ -33,4 +33,15 @@
 +  endif
  endif
  
++# The dummy and disk drivers have no external dependencies and upstream always
++# builds them. Without them a build that finds no real backend has no audio
++# driver at all, which makes SDL_AUDIODRIVER=dummy -- the usual way to run
++# headless or in CI -- impossible.
++cdata.set('SDL_AUDIO_DRIVER_DUMMY', 1)
++subdir('dummy')
++cdata.set('SDL_AUDIO_DRIVER_DISK', 1)
++subdir('disk')
++
  sources += files(
+   'SDL_audio.c',
+   'SDL_audiocvt.c',

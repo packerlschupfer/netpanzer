@@ -31,6 +31,11 @@ class SoundData;
 typedef std::multimap<std::string, SoundData*> chunks_t;
 typedef std::vector<std::string> musics_t;
 
+/// SDL3_mixer has no fixed channel array: sounds play on tracks that are
+/// created up front and reused. This is the equivalent of the twelve
+/// channels the SDL2 version allocated.
+static const int SOUND_TRACK_COUNT = 12;
+
 class SDLSound : public Sound {
  public:
   SDLSound();
@@ -54,9 +59,19 @@ class SDLSound : public Sound {
   void loadSound(const char* directory);
   std::string getIdName(const char* filename);
 
+  /// A track that is not currently playing, or -1 if all are busy.
+  int findFreeTrack();
+
+  MIX_Track* sound_tracks[SOUND_TRACK_COUNT];
+  float effects_gain;
+
+  static void SDLCALL musicFinished(void* userdata, MIX_Track* track);
   static void nextSong();
   static musics_t musicfiles;
   static musics_t::iterator currentsong;
+  static MIX_Mixer* mixer;
+  static MIX_Track* music_track;
+  static MIX_Audio* music_audio;
 };
 
 #endif

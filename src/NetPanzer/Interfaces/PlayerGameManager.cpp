@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "PowerUps/PowerUpInterface.hpp"
 #include "Scripts/ScriptManager.hpp"
 #include "System/DummySound.hpp"
+#include "System/SDLSound.hpp"
 #include "System/SDLEvents.hpp"
 #include "System/SDLVideo.hpp"
 #include "System/Sound.hpp"
@@ -141,9 +142,7 @@ void PlayerGameManager::initializeSoundSubSystem() {
 
   LOGGER.info("Initializing sound system.");
   try {
-    // Audio is stubbed while the SDL3_mixer port is outstanding; the
-    // DummySound fallback below takes over.
-    if (GameConfig::sound_enable) sound = nullptr;
+    if (GameConfig::sound_enable) sound = new SDLSound();
   } catch (std::exception &e) {
     LOGGER.warning("Couldn't initialize sound: %s", e.what());
   }
