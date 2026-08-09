@@ -1,0 +1,72 @@
+Source: netpanzer
+Section: games
+Priority: optional
+Maintainer: packerlschupfer <helmut.adrigan@chello.at>
+Build-Depends:
+ debhelper-compat (= 13),
+ gettext,
+ liblua5.4-dev,
+ libphysfs-dev,
+ meson (>= 0.59),
+ ninja-build,
+ pkgconf,
+# SDL3, SDL3_ttf and SDL3_mixer are built from the wraps in subprojects/
+# rather than taken from the archive: libsdl3-mixer-dev exists only in
+# unstable and requires libsdl3-dev (>= 3.4.0), while trixie carries 3.2.10,
+# so packaging against the archive would mean pulling SDL3 out of unstable.
+# The tarballs are in subprojects/packagecache, so the build needs no network.
+# What follows is therefore SDL3's own build dependencies, not this game's.
+ libasound2-dev,
+ libdbus-1-dev,
+ libegl-dev,
+ libfreetype-dev,
+ libpulse-dev,
+ libudev-dev,
+ libwayland-dev,
+ libxkbcommon-dev,
+ wayland-protocols
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://www.netpanzer.info/
+Vcs-Git: https://github.com/packerlschupfer/netpanzer.git
+Vcs-Browser: https://github.com/packerlschupfer/netpanzer
+
+Package: netpanzer
+Architecture: any
+Depends:
+ netpanzer-data (= ${source:Version}),
+ ${misc:Depends},
+ ${shlibs:Depends}
+Description: online multiplayer tactical warfare game
+ netPanzer is an isometric view real-time tactical game designed for
+ play across the Internet and over LAN systems.
+ .
+ netPanzer is designed for FAST ACTION combat -- it is not another resource
+ management clone. In fact, there aren't any resources at all. Each player
+ will have many units of different types at their disposal. Players can fight
+ until their units are destroyed -- then respawn and keep on going.
+ .
+ The game is real-time, but it's based on quick tactical action and unit
+ management. Battles progress quickly and constantly; in fact, they never
+ let up. There is no stop in the action because there is no waiting for
+ resources to be collected and converted into weaponry. Players can join
+ or leave multiplayer games at any time.
+ .
+ This build is from a fork carrying an SDL3 port, Lua 5.4, and a set of
+ memory-safety and network-input fixes.
+
+Package: netpanzer-data
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ ${misc:Depends}
+Recommends:
+ netpanzer
+Description: online multiplayer tactical warfare game - data files
+ netPanzer is an isometric view real-time tactical game designed for
+ play across the Internet and over LAN systems.
+ .
+ This package contains the maps, sounds, unit sprites, artwork and scripts
+ the game loads at runtime. It is architecture independent, which is why it
+ is split from the engine rather than shipped with it -- the data is by far
+ the larger half.

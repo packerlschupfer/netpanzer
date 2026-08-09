@@ -1,0 +1,40 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Netpanzer
+Source: https://www.netpanzer.info/page/download/
+Files-Excluded:
+ src/Lib/lua
+ src/Lib/physfs
+
+
+Files:*
+Copyright: 2004, Matthias Braun <matze@braunis.de>
+           2003, Ivo Danihelka <i.danihelka@sh.cvut.cz>
+                 Tyler Nielsen <tyler.nielsen@corniceco.com>
+                 Vlad Rahkoy <vlad@spaceship.com>
+                 Ingo Ruhnke <grumbel@gmx.de>
+           2004, Hollis Blanchard
+           2007, 2012, Aaron Perez <aaronps@gmail.com>
+           1998, Pyrosoft Inc.
+License: GPL-2+
+
+Files: src/Lib/optionmm/*
+Copyright: 2002, Christian Holm Christensen <cholm@nbi.dk>
+License: LGPL-2.1+
+
+
+Files: debian/*
+Copyright: 2002-2005, Bartosz Fenski <fenio@debian.org>
+           2006-2008, Gonéri Le Bouder <goneri@rulezlan.org>
+           2012,      Alexander Reichle-Schmehl <tolimar@debian.org>
+           2016-2017, Markus Koschany <apo@debian.org>
+License: GPL-2+
+
+License: GPL-2+
+ On Debian systems, the complete text of the GNU General Public License 2
+ can be found in the file `/usr/share/common-licenses/GPL-2'.
+
+License: LGPL-2.1+
+ On Debian systems, the complete text of GNU Lesser General Public License 2.1
+ can be found in the file `/usr/share/common-licenses/LGPL-2.1'.
+
+

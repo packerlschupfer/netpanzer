@@ -1,0 +1,4 @@
+netpanzer-data_0.9.0+fork1_all.deb games optional
+netpanzer-dbgsym_0.9.0+fork1_amd64.deb debug optional automatic=yes
+netpanzer_0.9.0+fork1_amd64.buildinfo games optional
+netpanzer_0.9.0+fork1_amd64.deb games optional

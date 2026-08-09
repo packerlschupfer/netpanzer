@@ -1,0 +1,5 @@
+# The SDL3 subproject installs its static library alongside the game. Nothing
+# should link against it after the build -- the binary already has it -- and a
+# game package has no business shipping a development library, so it is
+# deliberately dropped rather than packaged.
+usr/lib/*/libSDL3.a

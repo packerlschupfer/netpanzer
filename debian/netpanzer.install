@@ -1,0 +1,8 @@
+usr/games/netpanzer
+usr/share/locale
+# meson installs the project's own docs; claim them here rather than listing
+# the same files again in debian/netpanzer.docs, which would install twice.
+usr/share/doc/netpanzer
+debian/netpanzer.xpm            usr/share/pixmaps
+netpanzer.png                   usr/share/icons/hicolor/48x48/apps
+support/win32/netpanzer.desktop usr/share/applications

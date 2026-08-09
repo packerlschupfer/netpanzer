@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+# Debian policy puts games in /usr/games and their data in /usr/share/games.
+# Meson is told both, so the binary finds its data with no patching: the
+# datadir is compiled in rather than searched for.
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--bindir=games \
+		--datadir=share/games \
+		-Dnls=true \
+		--force-fallback-for=sdl3,sdl3_ttf,sdl3_mixer \
+		-Dsdl3:default_library=static \
+		-Dsdl3_ttf:default_library=static \
+		-Dsdl3_mixer:default_library=static
+
+# Why force the fallback: SDL3 must come from the wrap in subprojects/, not
+# from whatever happens to be on the build machine. Without this, meson takes
+# any SDL3 pkg-config it can find -- including an unpackaged one under
+# /usr/local -- and the result is a binary linked against a library dpkg knows
+# nothing about, which dpkg-shlibdeps then refuses to generate dependencies
+# for. Forcing it also makes the build reproducible on machines that differ.
+
+# The suite reads the game data, which is not installed yet at this point in
+# the build, so point it at the source tree.
+override_dh_auto_test:
+	NETPANZER_DATADIR=$(CURDIR)/data dh_auto_test
