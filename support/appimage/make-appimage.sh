@@ -46,11 +46,16 @@ fi
 # the container distro for linuxdeploy.
 # See https://github.com/netpanzer/netpanzer/issues/235
 sudo apt update && sudo apt upgrade -y
+# SDL3 and SDL3_mixer come from the wraps, so no SDL packages are needed --
+# but SDL3's ALSA and PulseAudio backends are only compiled in when their
+# headers are present. Without these two the AppImage builds cleanly, runs
+# fine, and is completely silent.
 sudo apt install -y \
   gettext \
   liblua5.1-0-dev \
   libphysfs-dev \
-  libsdl2-mixer-dev
+  libasound2-dev \
+  libpulse-dev
 
 # Set up build directory
 BUILD_DIR="$SOURCE_ROOT/appimage_build"

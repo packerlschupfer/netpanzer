@@ -17,7 +17,7 @@
    sdl_deps += dependency('wayland-cursor')
 --- a/src/audio/meson.build
 +++ b/src/audio/meson.build
-@@ -7,10 +7,49 @@
+@@ -7,10 +7,59 @@
    cdata.set('SDL_AUDIO_DRIVER_COREAUDIO', 1)
    subdir('coreaudio')
  else
@@ -54,6 +54,16 @@
 +    cdata.set_quoted('SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC', 'libpulse.so.0')
 +    sdl_deps += pulse_dep.partial_dependency(compile_args: true, includes: true)
 +    subdir('pulseaudio')
++  endif
++
++  # Say so loudly. With no real backend SDL falls back to the dummy driver,
++  # where opening a device, creating tracks and playing all succeed and the
++  # result is silence -- a failure with no symptom except a silent game, and
++  # nothing in the build output to explain it.
++  if not (pipewire_dep.found() or alsa_dep.found() or pulse_dep.found())
++    warning('No Linux audio backend found (PipeWire, ALSA or PulseAudio). ' +
++            'SDL3 will be built with only the dummy driver and the game ' +
++            'will have no sound. Install libasound2-dev or libpulse-dev.')
 +  endif
  endif
  

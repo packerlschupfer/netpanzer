@@ -105,9 +105,8 @@ jobs:
               libc6-dev-arm64-cross \
               liblua5.1-dev:amd64 \
               libphysfs-dev:amd64 \
-              libsdl2-dev:amd64 \
-              libsdl2-ttf-dev:amd64 \
-              libsdl2-mixer-dev:amd64
+              libasound2-dev:amd64 \
+              libpulse-dev:amd64
           else
             # When using the mingw-w64 from Ubuntu Jammy, the sdl2 build fails
             # fatal error: d3d12sdklayers.h: No such file or directory
@@ -128,9 +127,8 @@ jobs:
           gettext \
           liblua5.1-0-dev \
           libphysfs-dev \
-          libsdl2-dev \
-          libsdl2-mixer-dev \
-          libsdl2-ttf-dev
+          libasound2-dev \
+          libpulse-dev
 
     - name: Setup
       run: |

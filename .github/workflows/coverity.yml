@@ -17,9 +17,8 @@ jobs:
         sudo apt install -y \
           liblua5.1-0-dev \
           libphysfs-dev \
-          libsdl2-dev \
-          libsdl2-mixer-dev \
-          libsdl2-ttf-dev \
+          libasound2-dev \
+          libpulse-dev \
           meson
     - run: meson setup builddir -Dnls=false
     - uses: vapier/coverity-scan-action@v1
