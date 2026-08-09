@@ -104,7 +104,7 @@ void Choice::actionPerformed(const mMouseEvent &me) {
         // Make sure the choice is still on the screen.
         printf(
             "position out of bounds? size.y=[%d] parentDimensions.y=[%d] "
-            "choiceItemHeight=[%d] numChoices=[%ld] \n",
+            "choiceItemHeight=[%d] numChoices=[%zu] \n",
             size.y, parentDimensions.y, choiceItemHeight, choiceList.size());
         position.y = 0;
       }

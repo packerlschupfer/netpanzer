@@ -33,7 +33,9 @@ class ServerListView : public View {
   masterserver::ServerList getViewModel();
 
   virtual void doDraw(Surface& windowArea, Surface& clientArea);
-  virtual int lMouseUp(const iXY& up_pos, const iXY& down_pos);
+  // Down position first, matching View::lMouseUp and the definition. The
+  // declaration used to name them in the opposite order.
+  virtual int lMouseUp(const iXY& down_pos, const iXY& up_pos);
 
  private:
   masterserver::ServerList serverlist;

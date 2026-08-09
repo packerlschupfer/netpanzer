@@ -238,7 +238,7 @@ void CodeStatsView::drawPathingStats(Surface &clientArea) {
 
   str_loc.y += 12;
 
-  sprintf(strBuf, "Path Length: %ld ", PathingState::path_length);
+  sprintf(strBuf, "Path Length: %lu ", PathingState::path_length);
   clientArea.bltString(str_loc.x, str_loc.y, strBuf, Color::white, Color::gray);
 
   str_loc.y += 12;

@@ -38,9 +38,11 @@ class MissleWeapon : public Weapon {
   virtual void fsmFlight();
 
  public:
-  MissleWeapon(UnitID owner, unsigned short owner_type_id,
-               unsigned short damage, unsigned short size, iXY &start,
-               iXY &end);
+  // size and damage are in this order, matching the definition and every
+  // caller. The declaration used to name them the other way round; since both
+  // are unsigned short that compiled happily and only misled the reader.
+  MissleWeapon(UnitID owner, unsigned short owner_type_id, unsigned short size,
+               unsigned short damage, iXY &start, iXY &end);
   virtual void updateStatus();
   virtual void offloadGraphics(SpriteSorter &sorter);
 };

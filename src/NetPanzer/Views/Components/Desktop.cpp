@@ -332,8 +332,14 @@ void Desktop::clearAll() {
 // Purpose: Removes a window from the list.
 //--------------------------------------------------------------------------
 void Desktop::remove(View *view) {
-  if (view) std::remove(views.begin(), views.end(), view);
-}  // end add
+  // std::remove only shuffles the survivors to the front and hands back the
+  // new logical end; without the erase the vector keeps its old size and the
+  // view is still in it. That matters more than it sounds: the one caller
+  // deletes the view straight after calling this, so what stayed behind was a
+  // dangling pointer that every later draw and event dispatch walked over.
+  if (view)
+    views.erase(std::remove(views.begin(), views.end(), view), views.end());
+}  // end remove
 
 // activate
 //--------------------------------------------------------------------------
