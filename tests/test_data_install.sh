@@ -7,7 +7,13 @@
 
 set -ev
 
-SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy HOME=$PWD ./netpanzer &
+# SDL3 reads SDL_VIDEO_DRIVER / SDL_AUDIO_DRIVER; SDL2 read the unseparated
+# SDL_VIDEODRIVER / SDL_AUDIODRIVER. Set both so this works either way --
+# with only the SDL2 spelling the game tries to open a real display, finds
+# none on a CI runner, and exits before the check below.
+SDL_VIDEO_DRIVER=dummy SDL_AUDIO_DRIVER=dummy \
+SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+HOME=$PWD ./netpanzer &
 ./netpanzer &
 sleep 10s
 
