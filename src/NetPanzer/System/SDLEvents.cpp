@@ -31,6 +31,13 @@ bool handleSDLEvents() {
   static SDL_Event event;
   KeyboardInterface::sampleKeyboard();
   while (SDL_PollEvent(&event)) {
+    // SDL2 scaled mouse coordinates into the logical space itself, as part of
+    // delivering the event. SDL3 does not: it hands out window coordinates and
+    // expects this call. Without it every click is off by the letterbox offset
+    // and the render scale, which is invisible whenever the window happens to
+    // match the game resolution exactly -- and wrong at every other size.
+    if (Screen != 0) Screen->convertEventCoordinates(&event);
+
     switch (event.type) {
       case SDL_EVENT_QUIT:
         return true;

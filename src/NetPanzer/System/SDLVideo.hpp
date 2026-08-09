@@ -52,6 +52,10 @@ class SDLVideo {
   /// coordinates on the way. Always use this rather than
   /// SDL_WarpMouseInWindow, which does not know about the logical size.
   void warpMouse(int logical_x, int logical_y);
+  /// Rewrite an event's mouse coordinates from window space into game space.
+  /// SDL2 did this while delivering the event; SDL3 leaves it to the caller.
+  /// Must be called on every event before anything reads its coordinates.
+  void convertEventCoordinates(SDL_Event* event);
   void setPalette(SDL_Color* color);
   SDL_Surface* getSurface();
   SDL_Window* getWindow();

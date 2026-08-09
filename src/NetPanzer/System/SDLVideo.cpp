@@ -206,11 +206,12 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   //
   // This used to be disabled because it "breaks right mouse movement w/
   // SDL_WarpMouseInWindow". That is a real interaction, not a reason to give
-  // up the fix: SDL scales the coordinates it *gives* you, but
-  // SDL_WarpMouseInWindow still expects window coordinates. Warping with a
-  // logical coordinate therefore lands somewhere else, and the next motion
-  // event yields a nonsense delta. Every warp below goes through
-  // warpMouse(), which converts back.
+  // up the fix, but it does mean both directions have to be handled
+  // explicitly. Incoming events are scaled into game space in
+  // convertEventCoordinates(); SDL_WarpMouseInWindow, going the other way,
+  // still expects window coordinates, so warping with a logical coordinate
+  // lands somewhere else and the next motion event yields a nonsense delta.
+  // Every warp below goes through warpMouse(), which converts back.
   LOGGER.debug("Setting render logical size.");
   const bool setLogicalSizeOk = SDL_SetRenderLogicalPresentation(
       renderer, new_width, new_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -241,10 +242,10 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
 void SDLVideo::warpMouse(int logical_x, int logical_y) {
   if (window == nullptr) return;
 
-  // SDL_SetRenderLogicalPresentation scales the coordinates SDL reports, but
-  // SDL_WarpMouseInWindow still speaks window coordinates. Callers work in
-  // game coordinates, so convert on the way out or the cursor lands
-  // somewhere else entirely.
+  // Incoming coordinates are scaled into game space by
+  // convertEventCoordinates(), but SDL_WarpMouseInWindow speaks window
+  // coordinates. Callers work in game coordinates, so convert on the way out
+  // or the cursor lands somewhere else entirely.
   float window_x = (float)logical_x;
   float window_y = (float)logical_y;
   if (renderer != nullptr) {
@@ -253,6 +254,11 @@ void SDLVideo::warpMouse(int logical_x, int logical_y) {
   }
 
   SDL_WarpMouseInWindow(window, window_x, window_y);
+}
+
+void SDLVideo::convertEventCoordinates(SDL_Event* event) {
+  if (renderer == nullptr || event == nullptr) return;
+  SDL_ConvertEventToRenderCoordinates(renderer, event);
 }
 
 void SDLVideo::setPalette(SDL_Color *color) {
