@@ -33,8 +33,11 @@ jobs:
       fail-fast: false
       matrix:
         name: [standard]
-        # 20.04 supported until >= April 2025
-        ubuntu: [20.04, 22.04, 24.04]
+        # 20.04 is gone: GitHub retired the runner image, so those entries sat
+        # queued forever and the workflow could never finish -- which also
+        # makes it unusable as a required status check. Its support ended in
+        # April 2025 in any case.
+        ubuntu: [22.04, 24.04]
         cc: [gcc, clang]
         include:
           - name: with-lto
@@ -92,7 +95,7 @@ jobs:
         sudo apt install -y \
           python3 \
           python3-setuptools
-        # meson comes from pip on every runner, not just 20.04. The SDL
+        # meson comes from pip on every runner, not from apt. The SDL
         # wraps need a newer meson than Ubuntu 22.04's 0.61, so the no-deps
         # job -- the one that actually builds SDL from the wrap -- could not
         # configure it.
