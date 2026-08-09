@@ -27,7 +27,10 @@ class TrajectoryParticle2D : public Particle2D {
   fXYZ initialPos;
   int initialVelocity;    // The initial initialVelocity of the particle.
   float trajectoryAngle;  // Needs to be in radians.
-  fXYZ direction;
+  // No 'direction' here: Particle2D already has a protected one, and
+  // redeclaring it left two fields with the same name. Particle2D::reset()
+  // zeroed the base copy while this class read and wrote its own, so anything
+  // the base did with direction could not reach the particle that used it.
   int dieAtMidFlight;
   float halfLife;
 

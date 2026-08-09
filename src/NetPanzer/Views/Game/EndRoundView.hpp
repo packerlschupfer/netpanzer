@@ -55,7 +55,10 @@ class EndRoundView : public SpecialButtonView {
   virtual void mouseMove(const iXY &prevPos, const iXY &newPos);
   virtual void doActivate();
   virtual void doDeactivate();
-  void drawTitle(Surface &windowArea) {}
+  // No drawTitle override here. View::drawTitle is not virtual, so this class
+  // could never have replaced it; the empty body only looked like it
+  // suppressed the title. The view sets setBordered(false), which is what
+  // actually keeps the title from being drawn.
   //    virtual void processEvents();
 };  // end _WIN
 
