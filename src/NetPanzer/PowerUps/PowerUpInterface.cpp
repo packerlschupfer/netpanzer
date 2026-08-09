@@ -298,7 +298,28 @@ void PowerUpInterface::netMessagePowerUpHit(const NetMessage* message) {
   }
 }
 
-void PowerUpInterface::processNetMessages(const NetMessage* message) {
+/// Bytes a powerup message must contain for its id.
+static size_t powerUpMessageSize(Uint8 message_id) {
+  switch (message_id) {
+    case _net_message_id_powerup_create:
+      return sizeof(PowerUpCreateMesg);
+    case _net_message_id_powerup_hit:
+      return sizeof(PowerUpHitMesg);
+    default:
+      return sizeof(NetMessage);
+  }
+}
+
+void PowerUpInterface::processNetMessages(const NetMessage* message,
+                                          size_t size) {
+  const size_t needed = powerUpMessageSize(message->message_id);
+  if (size < needed) {
+    LOGGER.warning(
+        "Discarding short powerup message id %u: %u bytes, expected %u",
+        (unsigned)message->message_id, (unsigned)size, (unsigned)needed);
+    return;
+  }
+
   switch (message->message_id) {
     case _net_message_id_powerup_create:
       netMessagePowerUpCreate(message);

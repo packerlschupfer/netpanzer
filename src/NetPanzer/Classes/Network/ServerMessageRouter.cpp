@@ -71,7 +71,7 @@ void ServerMessageRouter::routePacket(const NetPacket* packet) {
       if (player) {
         player->resetAutokick();
       }
-      GameManager::processSystemMessage(message);
+      GameManager::processSystemMessage(message, packet->size);
       break;
 
     case _net_message_class_chat:

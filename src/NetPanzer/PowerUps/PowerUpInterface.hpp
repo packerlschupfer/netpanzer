@@ -54,7 +54,8 @@ class PowerUpInterface {
   static void updateState();
   static void offloadGraphics(SpriteSorter& sorter);
 
-  static void processNetMessages(const NetMessage* message);
+  /// size is how many bytes arrived; see the note on the system handler.
+  static void processNetMessages(const NetMessage* message, size_t size);
 
   static void syncPowerUps(ClientSocket* client);
   static void syncPowerUpsBC();

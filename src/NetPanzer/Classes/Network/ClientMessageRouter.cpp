@@ -47,7 +47,7 @@ void ClientMessageRouter::routeMessage(const NetPacket* packet) {
   const NetMessage* message = packet->getNetMessage();
   switch (message->message_class) {
     case _net_message_class_system:
-      GameManager::processSystemMessage(message);
+      GameManager::processSystemMessage(message, packet->size);
       break;
 
     case _net_message_class_connect:
@@ -72,7 +72,7 @@ void ClientMessageRouter::routeMessage(const NetPacket* packet) {
       break;
 
     case _net_message_class_objective:
-      ObjectiveInterface::clientHandleNetMessage(message);
+      ObjectiveInterface::clientHandleNetMessage(message, packet->size);
       break;
 
     case _net_message_class_game_control:
@@ -80,7 +80,7 @@ void ClientMessageRouter::routeMessage(const NetPacket* packet) {
       break;
 
     case _net_message_class_powerup:
-      PowerUpInterface::processNetMessages(message);
+      PowerUpInterface::processNetMessages(message, packet->size);
       break;
 
     case _net_message_class_chat:

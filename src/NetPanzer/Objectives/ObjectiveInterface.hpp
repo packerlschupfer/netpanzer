@@ -41,7 +41,8 @@ class ObjectiveInterface {
   static void loadObjectiveList(const char* file_path);
 
   static void serverHandleNetPacket(const NetPacket* packet);
-  static void clientHandleNetMessage(const NetMessage* message);
+  /// size is how many bytes arrived; see the note on the system handler.
+  static void clientHandleNetMessage(const NetMessage* message, size_t size);
 
   static void sendChangeGeneratingUnit(ObjectiveID objective_id,
                                        Uint8 unit_type, bool active);

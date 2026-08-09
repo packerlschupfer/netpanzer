@@ -51,6 +51,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Classes/Network/NetMessage.hpp"
 #include "Classes/Network/NetworkState.hpp"
 #include "Interfaces/GameControlRulesDaemon.hpp"
+#include "Interfaces/ConsoleInterface.hpp"
+#include "Interfaces/GameManager.hpp"
+#include "Objectives/ObjectiveInterface.hpp"
+#include "PowerUps/PowerUpInterface.hpp"
 
 namespace {
 
@@ -117,6 +121,25 @@ bool overreads(Fn handler, NetMessage *msg, size_t size) {
 }  // namespace
 
 /**
+ * Walks every id of a class through its handler with nothing but the two-byte
+ * header present. No id may read further than what arrived, whatever the id
+ * claims the message is -- that is the whole contract being asserted here.
+ */
+template <typename Fn>
+static void assertClassNeverOverreads(Fn handler, Uint8 message_class) {
+  for (int id = 0; id < 32; id++) {
+    GuardedMessage packet(sizeof(NetMessage));
+    NetMessage *msg = packet.get();
+    msg->message_class = message_class;
+    msg->message_id = (Uint8)id;
+
+    const bool read_past_end = overreads(handler, msg, sizeof(NetMessage));
+
+    assert(!read_past_end);
+  }
+}
+
+/**
  * A two-byte packet claiming to be a cycle-map message. The handler copies
  * map_name out of it, which lives at offset 2 and runs for 128 bytes -- none
  * of which arrived.
@@ -146,27 +169,45 @@ void test_cycleMapDoesNotOverread(void) {
  * from a server the player has merely picked off a list.
  */
 void test_connectHandlersDoNotOverread(void) {
-  // Ids are walked rather than named: the point is that no id may read beyond
-  // what arrived, not that any particular one is interesting.
-  for (int id = 0; id < 16; id++) {
-    GuardedMessage packet(sizeof(NetMessage));
-    NetMessage *msg = packet.get();
-    msg->message_class = _net_message_class_connect;
-    msg->message_id = (Uint8)id;
+  assertClassNeverOverreads(ClientConnectDaemon::processNetMessage,
+                            _net_message_class_connect);
+}
 
-    const bool read_past_end = overreads(ClientConnectDaemon::processNetMessage,
-                                         msg, sizeof(NetMessage));
 
-    assert(!read_past_end);
-  }
+/// system: set_view, view_control, connect_alert and ping_request all cast to
+/// structs with payload behind the header.
+void test_systemHandlersDoNotOverread(void) {
+  assertClassNeverOverreads(GameManager::processSystemMessage,
+                            _net_message_class_system);
+}
+
+/// objective: four casts, the widest being the objective sync message.
+void test_objectiveHandlersDoNotOverread(void) {
+  assertClassNeverOverreads(ObjectiveInterface::clientHandleNetMessage,
+                            _net_message_class_objective);
+}
+
+/// powerup: create and hit both carry a payload.
+void test_powerUpHandlersDoNotOverread(void) {
+  assertClassNeverOverreads(PowerUpInterface::processNetMessages,
+                            _net_message_class_powerup);
 }
 
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
+  // Some handlers report to the on-screen console, which divides by
+  // max_char_per_line and takes a modulus by console_size. Both are zero until
+  // it is initialised, so an uninitialised console turns any message into
+  // SIGFPE -- nothing to do with the packet, but it stops the walk dead.
+  ConsoleInterface::initialize(16);
+
   test_cycleMapDoesNotOverread();
   test_connectHandlersDoNotOverread();
+  test_systemHandlersDoNotOverread();
+  test_objectiveHandlersDoNotOverread();
+  test_powerUpHandlersDoNotOverread();
 
   return 0;
 }
@@ -176,6 +217,12 @@ int main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
+
+  // Some handlers report to the on-screen console, which divides by
+  // max_char_per_line and takes a modulus by console_size. Both are zero until
+  // it is initialised, so an uninitialised console turns any message into
+  // SIGFPE -- nothing to do with the packet, but it stops the walk dead.
+  ConsoleInterface::initialize(16);
   // The guard-page trick is POSIX; skipped rather than reimplemented on
   // VirtualAlloc, since the code under test is not platform specific.
   return 0;

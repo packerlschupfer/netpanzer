@@ -267,7 +267,32 @@ void ObjectiveInterface::serverHandleNetPacket(const NetPacket* packet) {
   }
 }
 
-void ObjectiveInterface::clientHandleNetMessage(const NetMessage* message) {
+/// Bytes an objective message must contain for its id.
+static size_t objectiveMessageSize(Uint8 message_id) {
+  switch (message_id) {
+    case _net_message_id_occupation_status_update:
+      return sizeof(ObjectiveOccupationUpdate);
+    case _net_message_id_objective_sync:
+      return sizeof(ObjectiveSyncMesg);
+    case _net_message_id_change_generating_unit:
+      return sizeof(ObjectiveChangeGeneratingUnit);
+    case _net_message_id_change_output_location:
+      return sizeof(ObjectiveChangeOutputLocation);
+    default:
+      return sizeof(NetMessage);
+  }
+}
+
+void ObjectiveInterface::clientHandleNetMessage(const NetMessage* message,
+                                                size_t size) {
+  const size_t needed = objectiveMessageSize(message->message_id);
+  if (size < needed) {
+    LOGGER.warning(
+        "Discarding short objective message id %u: %u bytes, expected %u",
+        (unsigned)message->message_id, (unsigned)size, (unsigned)needed);
+    return;
+  }
+
   switch (message->message_id) {
     case _net_message_id_occupation_status_update: {
       const ObjectiveOccupationUpdate* msg =

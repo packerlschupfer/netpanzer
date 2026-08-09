@@ -691,7 +691,45 @@ bool GameManager::clientGameSetup(int* percent_complete) {
 }
 
 // ******************************************************************
-void GameManager::processSystemMessage(const NetMessage* message) {
+/**
+ * Bytes a system message must contain for its id. Ids that read nothing past
+ * the header need only the header.
+ */
+static size_t systemMessageSize(Uint8 message_id) {
+  switch (message_id) {
+    case _net_message_id_system_set_view:
+      return sizeof(SystemSetPlayerView);
+    case _net_message_id_system_view_control:
+      return sizeof(SystemViewControl);
+    case _net_message_id_system_ping_request:
+      return sizeof(SystemPingRequest);
+    case _net_message_id_system_ping_ack:
+      return sizeof(SystemPingAcknowledge);
+    case _net_message_id_system_connect_alert:
+      return sizeof(SystemConnectAlert);
+    case _net_message_id_system_enckeychange:
+      return sizeof(SystemEnckeychange);
+    case _net_message_id_system_enckeychange_ack:
+      return sizeof(SystemEnckeychangeAck);
+    case _net_message_id_system_re_enckeychange_ack:
+      return sizeof(SystemReEnckeychangeAck);
+    case _net_message_id_system_reset_game_logic:
+      return sizeof(SystemResetGameLogic);
+    default:
+      return sizeof(NetMessage);
+  }
+}
+
+void GameManager::processSystemMessage(const NetMessage* message,
+                                       size_t size) {
+  const size_t needed = systemMessageSize(message->message_id);
+  if (size < needed) {
+    LOGGER.warning(
+        "Discarding short system message id %u: %u bytes, expected %u",
+        (unsigned)message->message_id, (unsigned)size, (unsigned)needed);
+    return;
+  }
+
   switch (message->message_id) {
     case _net_message_id_system_set_view:
       netMessageSetView(message);

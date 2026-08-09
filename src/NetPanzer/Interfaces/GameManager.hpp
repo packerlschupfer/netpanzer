@@ -102,7 +102,9 @@ class GameManager {
 
   static void requestNetworkPing();
 
-  static void processSystemMessage(const NetMessage* message);
+  /// size is how many bytes arrived; the id only says which struct the
+  /// sender claims to have sent. See the same note on the connect handler.
+  static void processSystemMessage(const NetMessage* message, size_t size);
 
   static void setVideoMode();
 
