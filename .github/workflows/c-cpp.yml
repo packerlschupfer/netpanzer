@@ -27,7 +27,10 @@ jobs:
   build:
     name: ${{ matrix.name }}-Ubuntu-${{ matrix.ubuntu }}-${{ matrix.cc }}
     strategy:
-      fail-fast: true
+      # One failing entry used to cancel the other eleven, so a single broken
+      # cross build hid whether any native build worked. Every entry reports
+      # for itself now.
+      fail-fast: false
       matrix:
         name: [standard]
         # 20.04 supported until >= April 2025

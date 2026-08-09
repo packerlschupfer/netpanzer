@@ -26,6 +26,9 @@ jobs:
   build-appimage:
     runs-on: ubuntu-latest
     strategy:
+      # Report every architecture rather than cancelling the rest on the
+      # first failure.
+      fail-fast: false
       matrix:
         platform:
           - linux/amd64
