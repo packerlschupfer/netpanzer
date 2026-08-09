@@ -101,7 +101,7 @@ jobs:
         # configure it.
         sudo apt install -y python3-pip
         python -m pip install --upgrade pip
-        pip install meson ninja
+        pip install --upgrade "meson>=1.6" ninja
         if [ -n "${{ matrix.cross-file }}" ]; then
           if [ "${{ contains(matrix.cross-file, 'linux') }}" == "true" ]; then
             # Cross-compiling to aarch64. The SDL3 wrap needs udev, dbus,

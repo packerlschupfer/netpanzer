@@ -52,7 +52,7 @@ jobs:
         # Ubuntu 22.04 ships 0.61.
         sudo apt install -y python3-pip
         python3 -m pip install --upgrade pip
-        pip install meson ninja
+        pip install --upgrade "meson>=1.6" ninja
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

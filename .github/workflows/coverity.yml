@@ -28,7 +28,7 @@ jobs:
         # meson from pip, not apt: the SDL3 wrap needs >= 1.6, which is newer
         # than the runner images ship.
         python3 -m pip install --upgrade pip
-        pip install meson ninja
+        pip install --upgrade "meson>=1.6" ninja
     - run: meson setup builddir -Dnls=false
     - uses: vapier/coverity-scan-action@v1
       with:

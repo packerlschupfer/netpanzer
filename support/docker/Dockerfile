@@ -38,7 +38,7 @@ RUN apt install -y \
       python3-pip \
       wayland-protocols && \
   python3 -m pip install --upgrade pip && \
-  pip install meson ninja
+  pip install --upgrade "meson>=1.6" ninja
 
 RUN \
   cd /netpanzer && \

@@ -23,7 +23,7 @@ RUN apt update && apt upgrade -y && apt install -y \
         sudo \
         wayland-protocols \
     && python3 -m pip install --upgrade pip \
-    && pip install meson
+    && pip install --upgrade "meson>=1.6"
 
 RUN useradd -m npbuilder && passwd -d npbuilder && \
   echo "npbuilder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
