@@ -12,7 +12,17 @@ on:
 
 
 env:
-  REGISTRY_IMAGE: ghcr.io/netpanzer/netpanzer
+  # Publish to whichever repository is running this, not to a hardcoded
+  # upstream namespace. On a fork the built-in token has no write access to
+  # ghcr.io/netpanzer, so the push failed with "permission_denied: The
+  # requested installation does not exist" after building perfectly well.
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
+
+# Pushing an image to the container registry needs write access to packages;
+# the default token is read-only.
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build-env:
