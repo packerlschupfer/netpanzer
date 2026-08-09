@@ -1,3 +1,0 @@
-shlibs:Depends=libc6 (>= 2.38), libfreetype6 (>= 2.2.1), libgcc-s1 (>= 3.0), libharfbuzz0b (>= 1.6.0), liblua5.4-0 (>= 5.4.6), libphysfs1 (>= 3.0.2), libstdc++6 (>= 14), libwayland-client0 (>= 1.23.0), libwayland-cursor0 (>= 1.0.2), libwayland-egl1 (>= 1.15.0), libx11-6 (>= 2:1.2.99.901), libxcursor1 (>> 1.1.2), libxext6, libxi6 (>= 2:1.5.99.2), libxkbcommon0 (>= 1.0.0), libxrandr2 (>= 2:1.2.99.3)
-misc:Depends=
-misc:Pre-Depends=

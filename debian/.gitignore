@@ -1,0 +1,11 @@
+# debhelper build output: staging trees, caches, stamps and generated lists.
+# Only the packaging source belongs in git.
+/.debhelper/
+/tmp/
+/netpanzer/
+/netpanzer-data/
+/files
+/*.substvars
+/*.debhelper
+/*.debhelper.log
+/debhelper-build-stamp
