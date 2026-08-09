@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Util/Log.hpp"
 
 TTF_Font *CachedFontRenderer::font = nullptr;
-Uint32 CachedFontRenderer::lastCleanedTick = 0;
+Uint64 CachedFontRenderer::lastCleanedTick = 0;
 std::unordered_map<std::string, RenderedText>
         CachedFontRenderer::rendered_surfaces = {};
 
@@ -87,7 +87,7 @@ SDL_Surface *CachedFontRenderer::render(const char *text, SDL_Color color, SDL_C
   auto it = rendered_surfaces.find(key);
   if (it != rendered_surfaces.end()) {
     // Return the cached surface
-    it->second.lastUsedTick = SDL_GetTicks();
+    it->second.lastUsedTick = SDL_GetTicks64();
     return it->second.sdlSurface;
   }
 
@@ -97,7 +97,7 @@ SDL_Surface *CachedFontRenderer::render(const char *text, SDL_Color color, SDL_C
           : TTF_RenderUTF8_Shaded(CachedFontRenderer::font, text, color, blendColor);
   if (rendered_surface) {
     // Store the rendered surface in the cache
-    RenderedText rendered_text(rendered_surface, SDL_GetTicks());
+    RenderedText rendered_text(rendered_surface, SDL_GetTicks64());
     rendered_surfaces[key] = rendered_text;
   }
 
@@ -113,8 +113,8 @@ SDL_Surface *CachedFontRenderer::renderWrapped(const char *text, SDL_Color color
 }
 
 void CachedFontRenderer::cleanup() {
-  const Uint32 currentTick = SDL_GetTicks();
-  const Uint32 cleanupThreshold = 20000;
+  const Uint64 currentTick = SDL_GetTicks64();
+  const Uint64 cleanupThreshold = 20000;
 
   if (currentTick - lastCleanedTick < cleanupThreshold) {
     return;
@@ -124,7 +124,7 @@ void CachedFontRenderer::cleanup() {
 
   // Iterate through the map to remove old RenderedText objects
   for (auto it = rendered_surfaces.begin(); it != rendered_surfaces.end();) {
-    Uint32 lastUsedTick = it->second.lastUsedTick;
+    Uint64 lastUsedTick = it->second.lastUsedTick;
     if (currentTick - lastUsedTick > cleanupThreshold) {
       SDL_FreeSurface(it->second.sdlSurface);  // Free SDL surface memory
       it = rendered_surfaces.erase(it);        // Remove the entry from the map

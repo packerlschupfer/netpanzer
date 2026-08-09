@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "2D/PackedSurface.hpp"
 #include "2D/Palette.hpp"
 #include "2D/Surface.hpp"
+#include "2D/SurfacePalette.hpp"
 #include "Util/FileSystem.hpp"
 
 int main(int argc, char *argv[]) {
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]) {
   }
 
   Palette::loadACT(palettefile);
-  SDL_SetPaletteColors(surf->format->palette, Palette::color, 0, 256);
+  SDL_SetPaletteColors(getSurfacePalette(surf), Palette::color, 0, 256);
 
   printf("There are %d frames\n", pak.getFrameCount());
 

@@ -30,16 +30,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class RenderedText {
  public:
   SDL_Surface* sdlSurface;
-  Uint32 lastUsedTick;
+  Uint64 lastUsedTick;
 
   RenderedText() : sdlSurface(nullptr), lastUsedTick(0) {}
-  RenderedText(SDL_Surface* surface, Uint32 tick)
+  RenderedText(SDL_Surface* surface, Uint64 tick)
       : sdlSurface(surface), lastUsedTick(tick) {}
 };
 
 class CachedFontRenderer {
  private:
-  static Uint32 lastCleanedTick;
+  static Uint64 lastCleanedTick;
   static std::unordered_map<std::string, RenderedText> rendered_surfaces;
   static std::string create_cache_key(const char* text, SDL_Color color, SDL_Color backColor, bool wrapped, int wrapLength);
   static TTF_Font* font;

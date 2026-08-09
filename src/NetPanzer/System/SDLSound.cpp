@@ -69,7 +69,9 @@ musics_t::iterator SDLSound::currentsong;
 
 //-----------------------------------------------------------------
 SDLSound::SDLSound() : Sound(), m_chunks() {
-  if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+  // "< 0" is the SDL2 convention; in SDL3 this returns bool and the test
+  // would be permanently false, quietly ignoring a failed audio init.
+  if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
     throw Exception("SDL_Init audio error: %s", SDL_GetError());
 
   if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) < 0)

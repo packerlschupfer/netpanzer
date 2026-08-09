@@ -193,13 +193,13 @@ bool BaseGameManager::mainLoop() {
  * Sleep to make stable FPS and happy CPU.
  */
 void BaseGameManager::sleeping() {
-  static Uint32 nextTime = 0;
+  static Uint64 nextTime = 0;
 
   if (FrameBench::skipSleep()) return;
 
-  Uint32 now = SDL_GetTicks();
+  Uint64 now = SDL_GetTicks64();
   if (now < nextTime) {
-    SDL_Delay(nextTime - now);
+    SDL_Delay((Uint32)(nextTime - now));
   }
   nextTime += TIMEINTERVAL;
 
@@ -209,7 +209,7 @@ void BaseGameManager::sleeping() {
   // the loop spins with no sleep at all until the accumulated debt is burned
   // off at full speed. Clamping degrades to "run at the real frame rate"
   // instead.
-  now = SDL_GetTicks();
+  now = SDL_GetTicks64();
   if (nextTime < now) {
     nextTime = now;
   }

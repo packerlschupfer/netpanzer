@@ -79,7 +79,7 @@ Heartbeat::~Heartbeat() {
 }
 
 void Heartbeat::checkHeartbeat() {
-  Uint32 now = SDL_GetTicks();
+  Uint64 now = SDL_GetTicks64();
 
   if (!masterservers.empty()) {
     std::map<TCPSocket *, MasterserverInfo *>::iterator msiter;
@@ -101,7 +101,7 @@ void Heartbeat::checkHeartbeat() {
 
 void Heartbeat::startHeartbeat() {
   std::vector<Address>::iterator iter = mslist.begin();
-  Uint32 now = SDL_GetTicks();
+  Uint64 now = SDL_GetTicks64();
   while (iter != mslist.end()) {
     TCPSocket *s = nullptr;
     MasterserverInfo *msi = nullptr;

@@ -17,6 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "Surface.hpp"
+#include "2D/SurfacePalette.hpp"
 
 #include <ctype.h>
 #include <math.h>
@@ -642,7 +643,9 @@ void Surface::bltTransColorFromSDLSurface(SDL_Surface *source, int x, int y) con
   assert(pixelsPerRow > 0);
   assert(numRows > 0);
 
-  SDL_Color *sourcePaletteColors = source->format->palette->colors;
+  const SDL_Palette *sourcePalette = getSurfacePalette(source);
+  assert(sourcePalette != 0);
+  const SDL_Color *sourcePaletteColors = sourcePalette->colors;
 
   int srcAdjustment = source->pitch - pixelsPerRow;
   int destAdjustment = getPitch() - pixelsPerRow;

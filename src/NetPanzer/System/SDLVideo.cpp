@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 
 #include "2D/Color.hpp"
+#include "2D/SurfacePalette.hpp"
 #include "Interfaces/ConsoleInterface.hpp"
 #include "Util/Exception.hpp"
 #include "Util/FileSystem.hpp"
@@ -61,7 +62,10 @@ SDLVideo::SDLVideo() : window(0) {
   this->have_prev_frame = false;
   memset(this->prev_lut, 0, sizeof(this->prev_lut));
   this->is_fullscreen = false;
-  if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+  // Spelled out rather than relying on the truthiness of the result: SDL2
+  // returns 0 on success here, SDL3 returns true, so an implicit test silently
+  // inverts across that upgrade instead of failing to compile.
+  if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
     throw Exception("Couldn't initialize SDL_video subsystem: %s",
                     SDL_GetError());
   }
@@ -247,7 +251,7 @@ void SDLVideo::warpMouse(int logical_x, int logical_y) {
 }
 
 void SDLVideo::setPalette(SDL_Color *color) {
-  SDL_SetPaletteColors(surface->format->palette, color, 0, 256);
+  SDL_SetPaletteColors(getSurfacePalette(surface), color, 0, 256);
 }
 
 SDL_Surface *SDLVideo::getSurface() { return surface; }
@@ -295,7 +299,7 @@ void SDLVideo::render() {
   }
 
   Uint32 lut[256];
-  const SDL_Palette *pal = surface->format->palette;
+  const SDL_Palette *pal = getSurfacePalette(surface);
   const int color_count = (pal != nullptr) ? pal->ncolors : 0;
   for (int i = 0; i < 256; i++) {
     if (i < color_count) {

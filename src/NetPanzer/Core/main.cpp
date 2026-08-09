@@ -229,8 +229,10 @@ BaseGameManager* initialise(int argc, char** argv) {
   }
 
   // Initialize SDL (don't initialize video or audio for dedicated servers)
+  // See the note in SDLVideo: the 0-on-success convention is SDL2's, so the
+  // comparison is explicit and will not silently invert under SDL3.
   if (dedicated_option.value() &&
-      SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) < 0) {
+      SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) != 0) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s",
                  SDL_GetError());
     exit(1);
