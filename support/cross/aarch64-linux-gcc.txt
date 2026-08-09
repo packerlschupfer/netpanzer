@@ -13,6 +13,11 @@ pkg-config = 'aarch64-linux-gnu-pkg-config'
 
 [host_machine]
 system = 'linux'
+# Meson autodetects the subsystem for a native build but cannot for a cross
+# one, and SDL3's hidapi meson checks host_machine.subsystem() -- without this
+# the whole configure dies with "Subsystem not defined or could not be
+# autodetected".
+subsystem = 'linux'
 cpu_family = 'aarch64'
 cpu = 'aarch64'
 endian = 'little'
