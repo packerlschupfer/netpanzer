@@ -30,6 +30,19 @@ class SDLVideo {
   SDL_Texture* texture;
   bool is_fullscreen;
 
+  /// Expanded ARGB copy of the screen, kept between frames so only the rows
+  /// that changed have to be converted and uploaded.
+  Uint32* argb_buffer;
+  /// Last frame's indexed pixels, to detect what changed.
+  Uint8* prev_indexed;
+  /// Last frame's palette, since identical indices can still mean new colours.
+  Uint32 prev_lut[256];
+  size_t argb_pixels;
+  size_t prev_indexed_bytes;
+  bool have_prev_frame;
+
+  void releaseFrameCache();
+
  public:
   SDLVideo();
   virtual ~SDLVideo();
