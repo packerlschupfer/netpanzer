@@ -549,16 +549,29 @@ void GameControlRulesDaemon::checkGameRules() {
   }
 }
 
-void GameControlRulesDaemon::netMessageCycleMap(const NetMessage* message) {
+void GameControlRulesDaemon::netMessageCycleMap(const NetMessage* message,
+                                               size_t size) {
   if (NetworkState::status == _network_state_client ||
       NetworkState::status == _network_state_bot)  // client only (security fix)
   {
-    GameControlCycleMap* cycle_map_mesg;
+    // A server can announce a cycle-map message and send fewer bytes than one
+    // contains. Reading map_name out of that walks off the end of the packet.
+    if (size < sizeof(GameControlCycleMap)) {
+      LOGGER.warning(
+          "Discarding short cycle map message: %u bytes, expected %u",
+          (unsigned)size, (unsigned)sizeof(GameControlCycleMap));
+      return;
+    }
 
-    cycle_map_mesg = (GameControlCycleMap*)message;
+    const GameControlCycleMap* cycle_map_mesg =
+        (const GameControlCycleMap*)message;
 
-    snprintf(map_cycle_fsm_client_map_name, 256, "%s",
-             cycle_map_mesg->map_name);
+    // "%.*s" rather than "%s": map_name is a fixed 128-byte field and nothing
+    // obliges a peer to terminate it, so the read is bounded by the field as
+    // well as by the size check above.
+    snprintf(map_cycle_fsm_client_map_name,
+             sizeof(map_cycle_fsm_client_map_name), "%.*s",
+             (int)sizeof(cycle_map_mesg->map_name), cycle_map_mesg->map_name);
     map_cycle_fsm_client_state = _map_cycle_client_start_map_load;
   }
 }
@@ -567,10 +580,11 @@ void GameControlRulesDaemon::netMessageCycleRespawnAck(const NetMessage*) {
   map_cycle_fsm_client_respawn_ack_flag = true;
 }
 
-void GameControlRulesDaemon::processNetMessage(const NetMessage* message) {
+void GameControlRulesDaemon::processNetMessage(const NetMessage* message,
+                                              size_t size) {
   switch (message->message_id) {
     case _net_message_id_game_control_cycle_map:
-      netMessageCycleMap(message);
+      netMessageCycleMap(message, size);
       break;
 
     case _net_message_id_game_control_cycle_respawn_ack:

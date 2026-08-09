@@ -285,7 +285,44 @@ void ClientConnectDaemon::netMessageConnectServerDisconnect(
                                 "Server has terminated the game");
 }
 
-void ClientConnectDaemon::processNetMessage(const NetMessage *message) {
+/**
+ * Bytes a connect message must contain for its id, or just the header when the
+ * id carries no payload beyond it. Kept next to the handlers that cast, so the
+ * two cannot drift apart unnoticed.
+ */
+static size_t connectMessageSize(Uint8 message_id) {
+  switch (message_id) {
+    case _net_message_id_connect_join_game_request_ack:
+      return sizeof(ClientConnectJoinRequestAck);
+    case _net_message_id_client_connect_result:
+      return sizeof(ClientConnectResult);
+    case _net_message_id_client_connect_process_update:
+      return sizeof(ConnectProcessUpdate);
+    case _net_message_id_client_connect_process_state_mesg:
+      return sizeof(ConnectProcessStateMessage);
+    case _net_message_id_connect_server_game_setup:
+      return sizeof(ConnectMesgServerGameSettings);
+    case _net_message_id_connect_netPanzer_server_disconnect:
+      return sizeof(ConnectMesgNetPanzerServerDisconnect);
+    default:
+      return sizeof(NetMessage);
+  }
+}
+
+void ClientConnectDaemon::processNetMessage(const NetMessage *message,
+                                           size_t size) {
+  // One gate for the whole class rather than a check at each cast: every
+  // message below is a fixed-size struct, so "did enough bytes arrive for the
+  // struct this id names" answers it for all of them. Unknown ids fall
+  // through to the state machine, which only reads the header.
+  const size_t needed = connectMessageSize(message->message_id);
+  if (size < needed) {
+    LOGGER.warning(
+        "Discarding short connect message id %u: %u bytes, expected %u",
+        (unsigned)message->message_id, (unsigned)size, (unsigned)needed);
+    return;
+  }
+
   switch (message->message_id) {
     case _net_message_id_client_connect_process_state_mesg: {
       netMessageConnectProcessMessage(message);

@@ -5,7 +5,8 @@ test_cases = [
   '../src/NetPanzer/Particles/Particle2D',
   '../src/NetPanzer/Classes/Network/NetMessageEncoder',
   '../src/Lib/ArrayUtil/BitArray',
-  '../src/NetPanzer/Classes/AI/Astar'
+  '../src/NetPanzer/Classes/AI/Astar',
+  'netmessage_bounds'
   ]
 
 fs = import('fs')

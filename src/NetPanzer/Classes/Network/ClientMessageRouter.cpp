@@ -51,7 +51,7 @@ void ClientMessageRouter::routeMessage(const NetPacket* packet) {
       break;
 
     case _net_message_class_connect:
-      ClientConnectDaemon::processNetMessage(message);
+      ClientConnectDaemon::processNetMessage(message, packet->size);
       break;
 
     case _net_message_class_player:
@@ -76,7 +76,7 @@ void ClientMessageRouter::routeMessage(const NetPacket* packet) {
       break;
 
     case _net_message_class_game_control:
-      GameControlRulesDaemon::processNetMessage(message);
+      GameControlRulesDaemon::processNetMessage(message, packet->size);
       break;
 
     case _net_message_class_powerup:

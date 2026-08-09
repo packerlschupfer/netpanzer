@@ -48,7 +48,10 @@ class ClientConnectDaemon {
 
   static void connectProcess();
 
-  static void processNetMessage(const NetMessage* message);
+  /// size is how many bytes actually arrived; see the note on the
+  /// game_control handler. Everything here comes from a server the player
+  /// merely picked off a list, so it is unverified input by definition.
+  static void processNetMessage(const NetMessage* message, size_t size);
 
   static void serverConnectionBroken();
 

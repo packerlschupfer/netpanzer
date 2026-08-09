@@ -54,7 +54,7 @@ class GameControlRulesDaemon {
 
   static void mapLoadFailureResponse(int result_code, const char* map_name);
 
-  static void netMessageCycleMap(const NetMessage* message);
+  static void netMessageCycleMap(const NetMessage* message, size_t size);
   static void netMessageCycleRespawnAck(const NetMessage* message);
 
  public:
@@ -65,7 +65,11 @@ class GameControlRulesDaemon {
 
   static void forceMapChange(std::string map);
 
-  static void processNetMessage(const NetMessage* message);
+  /// size is how many bytes actually arrived. A message id only says which
+  /// struct the sender claims to have sent; it does not guarantee that many
+  /// bytes are there, so handlers that read past the header need this to
+  /// check before they cast.
+  static void processNetMessage(const NetMessage* message, size_t size);
   static void updateGameControlFlow();
   static unsigned char getGameState() { return game_state; };
   static int getExecMode() { return execution_mode; }
