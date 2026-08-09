@@ -16,30 +16,27 @@ on:
     branches: master
     paths:
     - '**/appimage.yml'
-    - '**/AppRun'
-    - '**/make-appimage.sh'
+    - 'support/appimage/**'
 
 env:
   VERSION: ${{ inputs.version }}
 
 jobs:
   build-appimage:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       # Report every architecture rather than cancelling the rest on the
       # first failure.
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
-          # linux/arm/v7 dropped. SDL3 fails to assemble on 32-bit ARM here:
-          #   Error: thumb conditional instruction should be in IT block
-          #          -- `strexeq r3,r2,[r0]'
-          # That is SDL's own atomic code being built as Thumb without the
-          # required IT block, not anything this project controls, and it is
-          # not worth carrying a broken architecture to find out each week.
-          # Revisit if SDL3 or the wrapdb port fixes it.
+        # Native runners rather than qemu. arm/v7 is gone: the linuxdeploy
+        # image publishes amd64 and arm64 manifests only, and SDL3 does not
+        # assemble on 32-bit ARM here anyway ("thumb conditional instruction
+        # should be in IT block" from its own atomic code). Source builds via
+        # support/cross/ remain available for that case.
+        os:
+          - ubuntu-24.04        # native amd64
+          - ubuntu-24.04-arm    # native arm64
     steps:
     - name: Set version
       run: |
@@ -52,20 +49,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - if: ${{ ! contains(matrix.platform, 'amd64') }}
-      uses: docker/setup-qemu-action@v3
-
     - name: Build AppImage
-      run: |
-        docker run -t \
-        --platform=${{ matrix.platform }} \
-        --rm \
-        -e HOSTUID=$(id -u) \
-        -e VERSION \
-        -v $GITHUB_WORKSPACE:/workspace \
-        -w /workspace andy5995/linuxdeploy:v2-focal support/appimage/make-appimage.sh
-        # Docs for this container are at
-        # https://github.com/andy5995/linuxdeploy-build-helper-container
+      # Container docs: https://github.com/andy5995/linuxdeploy-build-helper-container
+      run: docker compose -f support/appimage/docker-compose.yml run --rm build
 
     - name: Create sha256sum
       run: |
@@ -89,7 +75,9 @@ jobs:
         omitBodyDuringUpdate: true
         omitNameDuringUpdate: true
         tag: appimage-weekly
-        removeArtifacts: ${{ matrix.platform == 'linux/amd64' }}
+        # Only the amd64 job clears stale artifacts, so it does not delete
+        # the arm64 job's upload afterwards.
+        removeArtifacts: ${{ matrix.os == 'ubuntu-24.04' }}
 
     - if: ${{ github.ref != 'refs/heads/master' }}
       name: Upload AppImage
