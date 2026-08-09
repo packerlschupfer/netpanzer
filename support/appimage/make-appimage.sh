@@ -58,6 +58,7 @@ sudo apt install -y \
   libwayland-dev \
   wayland-protocols \
   libxkbcommon-dev \
+  libegl-dev \
   libasound2-dev \
   libpulse-dev
 

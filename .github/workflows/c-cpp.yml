@@ -109,6 +109,7 @@ jobs:
               libwayland-dev:amd64 \
               wayland-protocols \
               libxkbcommon-dev:amd64 \
+              libegl-dev:amd64 \
               libasound2-dev:amd64 \
               libpulse-dev:amd64
           else
@@ -125,6 +126,21 @@ jobs:
           fi
         fi
 
+    # The no-deps job builds every wrappable dependency from source, but the
+    # SDL3 wrap still needs these from the system: there is no wrap for udev,
+    # dbus, wayland or EGL, and without them it cannot configure at all.
+    - if: ${{ contains(matrix.name, 'no-deps') }}
+      run: |
+        sudo apt install -y \
+          libudev-dev \
+          libdbus-1-dev \
+          libwayland-dev \
+          wayland-protocols \
+          libxkbcommon-dev \
+          libegl-dev \
+          libasound2-dev \
+          libpulse-dev
+
     - if: ${{ ! contains(matrix.name, 'no-deps') }}
       run: |
         sudo apt install -y \
@@ -136,6 +152,7 @@ jobs:
           libwayland-dev \
           wayland-protocols \
           libxkbcommon-dev \
+          libegl-dev \
           libasound2-dev \
           libpulse-dev
 

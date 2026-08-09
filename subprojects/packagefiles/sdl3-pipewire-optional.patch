@@ -15,6 +15,22 @@
    sdl_deps += dependency('wayland-client')
    sdl_deps += dependency('wayland-egl')
    sdl_deps += dependency('wayland-cursor')
+@@ -456,7 +462,14 @@
+   input: 'include/build_config/SDL_build_config.h.cmake',
+   output: 'SDL_build_config.h',
+   configuration: cdata,
+-  format: 'cmake',
++  # 'cmake@', not 'cmake'. The template substitutes with @VAR@ throughout (35
++  # of them, no ${VAR} anywhere), and only the cmake@ format expands that form.
++  # Plain 'cmake' leaves lines like
++  #     #cmakedefine SDL_AUDIO_DRIVER_ALSA_DYNAMIC @SDL_AUDIO_DRIVER_ALSA_DYNAMIC@
++  # half-substituted on the meson versions that do not expand @VAR@ here,
++  # emitting a literal @ into a C header. Newer meson happens to expand it
++  # either way, which is why this only failed on some machines.
++  format: 'cmake@',
+ )
+ 
+ if get_option('default_library') == 'shared'
 --- a/src/audio/meson.build
 +++ b/src/audio/meson.build
 @@ -7,10 +7,59 @@
