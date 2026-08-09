@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Interfaces/BotGameManager.hpp"
 #include "Interfaces/DedicatedGameManager.hpp"
 #include "2D/CachedFontRenderer.hpp"
+#include "Views/Components/Desktop.hpp"
 #include "Interfaces/GameConfig.hpp"
 #include "Interfaces/PlayerGameManager.hpp"
 #include "Localization.hpp"
@@ -77,6 +78,11 @@ void shutdown(bool save_config) {
 #endif
 
   // final cleaning
+  // Desktop owns every view ever added and has always had clearAll() to
+  // delete them; nothing called it. Run it first, while SDL is still up --
+  // view destructors free SDL surfaces -- and before the subsystems below
+  // that their contents may still reference.
+  Desktop::clearAll();
   Weapon::uninit();
   PowerUpInterface::uninitialize();
   PuffParticle2D::unloadPAKFiles();
