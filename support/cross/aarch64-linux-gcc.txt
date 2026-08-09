@@ -4,6 +4,12 @@ cpp = 'aarch64-linux-gnu-g++'
 ar = 'aarch64-linux-gnu-ar'
 strip = 'aarch64-linux-gnu-strip'
 ld = 'aarch64-linux-gnu-ld'
+# Without this meson has no pkg-config for the host machine and any
+# dependency() lookup fails outright -- which is how the SDL3 wrap, which
+# requires udev/dbus/wayland from the system, could not configure at all.
+# Both spellings: meson took 'pkgconfig' historically and 'pkg-config' now.
+pkgconfig = 'aarch64-linux-gnu-pkg-config'
+pkg-config = 'aarch64-linux-gnu-pkg-config'
 
 [host_machine]
 system = 'linux'

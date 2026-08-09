@@ -101,20 +101,34 @@ jobs:
         pip install meson ninja
         if [ -n "${{ matrix.cross-file }}" ]; then
           if [ "${{ contains(matrix.cross-file, 'linux') }}" == "true" ]; then
+            # Cross-compiling to aarch64. The SDL3 wrap needs udev, dbus,
+            # wayland, xkbcommon and EGL *for the target*, so amd64 copies of
+            # them are no use -- arm64 has to be enabled as a foreign
+            # architecture and the packages pulled from ports.ubuntu.com,
+            # which is where Ubuntu keeps non-x86 builds.
+            sudo dpkg --add-architecture arm64
+            codename=$(lsb_release -cs)
+            # Existing entries have to be pinned to amd64 first, or apt tries
+            # to fetch arm64 indexes from archives that do not carry them.
+            sudo sed -i 's|^deb http|deb [arch=amd64] http|g' /etc/apt/sources.list
+            sudo sed -i 's|^deb http|deb [arch=amd64] http|g' /etc/apt/sources.list.d/*.list || true
+            printf 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s main universe\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s-updates main universe\n' "$codename" "$codename" | sudo tee /etc/apt/sources.list.d/arm64-ports.list
+            sudo apt update
             sudo apt install -y \
               g++-aarch64-linux-gnu \
-              gettext:amd64 \
+              pkg-config-aarch64-linux-gnu \
+              gettext \
               libc6-dev-arm64-cross \
-              liblua5.4-dev:amd64 \
-              libphysfs-dev:amd64 \
-              libudev-dev:amd64 \
-              libdbus-1-dev:amd64 \
-              libwayland-dev:amd64 \
               wayland-protocols \
-              libxkbcommon-dev:amd64 \
-              libegl-dev:amd64 \
-              libasound2-dev:amd64 \
-              libpulse-dev:amd64
+              liblua5.4-dev:arm64 \
+              libphysfs-dev:arm64 \
+              libudev-dev:arm64 \
+              libdbus-1-dev:arm64 \
+              libwayland-dev:arm64 \
+              libxkbcommon-dev:arm64 \
+              libegl-dev:arm64 \
+              libasound2-dev:arm64 \
+              libpulse-dev:arm64
           else
             # When using the mingw-w64 from Ubuntu Jammy, the SDL build fails
             # fatal error: d3d12sdklayers.h: No such file or directory
