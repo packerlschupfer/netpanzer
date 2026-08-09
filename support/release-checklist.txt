@@ -3,14 +3,13 @@
 meson.build
 support/scripts/prep-appimage.sh
 
-Remove from meson default options:
+Nothing to do about sanitizers here any more. They used to be in the project's
+default options, so a release had to strip them out by hand and put them back
+afterwards. They are opt-in now: a plain "meson setup" already produces the
+build we ship, and CI turns them on explicitly for the job that wants them.
 
-    'b_sanitize=address,undefined',
-    'b_lundef=false'
-
-Those two options can be disabled easily enough by package maintainers, but
-anybody else who wants to build from the release wouldn't necessarily know
-they should be disabled. Having that enabled slows the game down a bit.
+(b_lundef=false stays in the default options. It is only needed when sanitizers
+are enabled, and it is harmless when they are not.)
 
 
 ## Translations
@@ -72,11 +71,6 @@ Change version number to a dev version (see files above). Note messon doesn't
 allow alpha characters and typically projects use something like 0.9.0.555 for
 dev versions.
 
-
-Add back to meson default options:
-
-    'b_sanitize=address,undefined',
-    'b_lundef=false'
 
 
 Close milestone (https://github.com/netpanzer/netpanzer/milestones)

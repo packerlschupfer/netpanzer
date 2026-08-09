@@ -70,7 +70,6 @@ if [ ! -d "$BUILD_DIR" ]; then
   meson setup "$BUILD_DIR" \
     -Dbuildtype=release \
     -Dstrip=true \
-    -Db_sanitize=none \
     -Dprefix=/usr
 fi
 

@@ -22,7 +22,6 @@ RUN \
   cd /netpanzer && \
   ./setup-build.sh _build \
     -Dprefix=/usr \
-    -Db_sanitize=none \
     -Dbuildtype=release -Dstrip=true && \
   cd _build && \
   ninja && \

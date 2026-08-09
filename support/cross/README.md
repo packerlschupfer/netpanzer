@@ -21,10 +21,10 @@ If you are compiling on Ubuntu and the SDL2 build fails, you can try the
 workaround we are using in [our
 workflow](https://github.com/netpanzer/netpanzer/blob/master/.github/workflows/c-cpp.yml).
 
-    meson setup --cross-file support/cross/x86_64-w64-mingw32.txt -Db_sanitize=none build-mingw
+    meson setup --cross-file support/cross/x86_64-w64-mingw32.txt build-mingw
 
 ## aarch64
 
 ### Linux
 
-    meson setup --cross-file=support/cross/aarch64-linux-gcc.txt -Db_sanitize=none build-aarch64
+    meson setup --cross-file=support/cross/aarch64-linux-gcc.txt build-aarch64
