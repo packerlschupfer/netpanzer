@@ -1,18 +1,29 @@
 FROM ubuntu:jammy
 LABEL org.opencontainers.image.source=https://github.com/netpanzer/netpanzer
 ARG DEBIAN_FRONTEND=noninteractive
+# SDL3 and its satellites are built from the wraps in subprojects/, so what
+# is needed here is SDL3's own build dependencies rather than SDL packages.
+# meson comes from pip: the SDL3 wrap requires >= 1.6 and jammy ships 0.61.
 RUN apt update && apt upgrade -y && apt install -y \
         build-essential \
         gettext \
         git \
-        liblua5.1-dev \
+        libasound2-dev \
+        libdbus-1-dev \
+        libegl-dev \
+        libfreetype-dev \
+        liblua5.4-dev \
         libphysfs-dev \
-        libsdl2-dev \
-        libsdl2-mixer-dev \
-        libsdl2-ttf-dev \
-        meson \
+        libpulse-dev \
+        libudev-dev \
+        libwayland-dev \
+        libxkbcommon-dev \
         ninja-build \
-        sudo
+        python3-pip \
+        sudo \
+        wayland-protocols \
+    && python3 -m pip install --upgrade pip \
+    && pip install meson
 
 RUN useradd -m npbuilder && passwd -d npbuilder && \
   echo "npbuilder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
