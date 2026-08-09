@@ -5,15 +5,22 @@ building it. Here's a list of them:
 
 - A compiler that supports C++17
 - [The Meson Build System](https://mesonbuild.com/)
-- lua5.1-dev
+- lua5.4-dev
 - physfs-dev
 - Python3 (for build scripts)
-- SDL2
-  http://www.libsdl.org
-- SDL2_ttf
-  https://wiki.libsdl.org/SDL2_ttf/FrontPage
-- SDL2_mixer
-  http://www.libsdl.org/projects/SDL_mixer/
+- SDL3
+  https://www.libsdl.org
+- SDL3_ttf
+  https://wiki.libsdl.org/SDL3_ttf/FrontPage
+- SDL3_mixer
+  https://www.libsdl.org/projects/SDL_mixer/
+
+Any of these that the system does not provide are built from
+`subprojects/*.wrap`, so a plain `meson setup` works with none of them
+installed. SDL3's ALSA and PulseAudio backends are the exception worth
+knowing about: they are only compiled in when `libasound2-dev` /
+`libpulse-dev` are present at build time, and without them the game builds
+and runs silently.
 
 - [gettext](https://www.gnu.org/software/gettext/) (If you want to install
 translations, otherwise, use '-Dnls=false' when setting up the build).

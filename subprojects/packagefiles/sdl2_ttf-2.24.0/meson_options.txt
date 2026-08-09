@@ -1,6 +1,0 @@
-option(
-  'harfbuzz',
-  type: 'feature',
-  value: 'disabled',
-  description: 'Complex text shaping through HarfBuzz',
-)

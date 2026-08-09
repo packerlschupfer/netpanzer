@@ -90,10 +90,10 @@ jobs:
         sudo apt install -y \
           python3 \
           python3-setuptools
-        # meson comes from pip on every runner, not just 20.04. The sdl2
-        # wrap needs meson >= 0.63 and Ubuntu 22.04 ships 0.61, so the
-        # no-deps job -- the one that actually builds SDL2 from the wrap --
-        # could not configure it.
+        # meson comes from pip on every runner, not just 20.04. The SDL
+        # wraps need a newer meson than Ubuntu 22.04's 0.61, so the no-deps
+        # job -- the one that actually builds SDL from the wrap -- could not
+        # configure it.
         sudo apt install -y python3-pip
         python -m pip install --upgrade pip
         pip install meson ninja
@@ -108,7 +108,7 @@ jobs:
               libasound2-dev:amd64 \
               libpulse-dev:amd64
           else
-            # When using the mingw-w64 from Ubuntu Jammy, the sdl2 build fails
+            # When using the mingw-w64 from Ubuntu Jammy, the SDL build fails
             # fatal error: d3d12sdklayers.h: No such file or directory
             # I found a discussion and fix at https://github.com/doitsujin/dxvk/issues/3328
             sudo apt purge --autoremove mingw-w64

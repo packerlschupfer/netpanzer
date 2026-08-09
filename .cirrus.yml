@@ -18,7 +18,8 @@ freebsd_task:
     image_family: freebsd-14-1
   pkginstall_script:
     - pkg update -f
-    - pkg install -y gettext meson ninja physfs pkgconf SDL2 sdl2_mixer sdl2_ttf
+    # No sdl3_mixer port exists yet; that one comes from the wrap.
+    - pkg install -y gettext meson ninja physfs pkgconf sdl3 sdl3_ttf
   setup_script:
   - ./setup-build.sh _build
   build_script:
@@ -45,7 +46,7 @@ macos_task:
     image: ghcr.io/cirruslabs/macos-runner:sonoma
   pkginstall_script:
     - brew update
-    - brew install gettext meson ninja physfs sdl2 sdl2_ttf sdl2_mixer
+    - brew install gettext meson ninja physfs sdl3 sdl3_ttf sdl3_mixer
     # Make sure msgfmt is on PATH so the translations get built; older gettext
     # formulas were keg-only. Harmless when it is already linked. Meson locates
     # libintl on its own either way.

@@ -120,33 +120,34 @@ if not sdl3_dep.found()
     default_options: ['default_library=static'])
 endif
 deps += sdl3_dep
-sdl2_dep = sdl3_dep
 
-# SDL3 has no separate SDL2main library.
-sdl2main_dep = []
+# SDL3 dropped the separate SDLmain library that SDL2 had, so there is nothing
+# to link here. Kept as an empty list because the executables still reference
+# it, and an empty dependency list is valid.
+sdlmain_dep = []
 
 # Don't add to deps, but add it to netpanzer_dep when the dependency is declared
 
-sdl2_ttf_dep = dependency('sdl3-ttf', required: false)
-if not sdl2_ttf_dep.found()
-  sdl2_ttf_dep = dependency(
+sdl3_ttf_dep = dependency('sdl3-ttf', required: false)
+if not sdl3_ttf_dep.found()
+  sdl3_ttf_dep = dependency(
     'sdl3_ttf',
     required: true,
     fallback: 'sdl3_ttf',
     default_options: ['default_library=static'])
 endif
-deps += sdl2_ttf_dep
+deps += sdl3_ttf_dep
 
-sdl2_mixer_dep = dependency('sdl3-mixer', required: false)
-if not sdl2_mixer_dep.found()
+sdl3_mixer_dep = dependency('sdl3-mixer', required: false)
+if not sdl3_mixer_dep.found()
   # Not in wrapdb; the meson build lives in subprojects/packagefiles/.
-  sdl2_mixer_dep = dependency(
+  sdl3_mixer_dep = dependency(
     'sdl3_mixer',
     required: true,
     fallback: 'sdl3_mixer',
     default_options: ['default_library=static'])
 endif
-deps += sdl2_mixer_dep
+deps += sdl3_mixer_dep
 
 inc_dirs = [include_directories('.')]
 
