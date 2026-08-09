@@ -217,12 +217,6 @@ int main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
-
-  // Some handlers report to the on-screen console, which divides by
-  // max_char_per_line and takes a modulus by console_size. Both are zero until
-  // it is initialised, so an uninitialised console turns any message into
-  // SIGFPE -- nothing to do with the packet, but it stops the walk dead.
-  ConsoleInterface::initialize(16);
   // The guard-page trick is POSIX; skipped rather than reimplemented on
   // VirtualAlloc, since the code under test is not platform specific.
   return 0;
