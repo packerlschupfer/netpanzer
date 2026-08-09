@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "NetworkManager.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <list>
 #include <map>
@@ -32,7 +32,7 @@ namespace network {
 static bool network_running = false;
 
 static SDL_Thread *resolverThread = 0;
-static SDL_sem *semaphore = 0;
+static SDL_Semaphore *semaphore = 0;
 
 static Address thread_work;
 static int to_resolve = 0;
@@ -45,7 +45,7 @@ int NetworkManager::resolver_worker(void *data) {
   (void)data;
   while (network_running) {
     resolver_busy = false;
-    SDL_SemWait(semaphore);
+    SDL_WaitSemaphore(semaphore);
     if (!network_running) break;
 
     struct addrinfo hints;
@@ -99,7 +99,7 @@ bool NetworkManager::initialize() {
 void NetworkManager::cleanUp() {
   network_running = false;
 
-  SDL_SemPost(semaphore);
+  SDL_SignalSemaphore(semaphore);
   int st;
   SDL_WaitThread(resolverThread, &st);
 
@@ -150,7 +150,7 @@ void NetworkManager::run() {
 
     resolver_busy = true;
     resolving = true;
-    SDL_SemPost(semaphore);
+    SDL_SignalSemaphore(semaphore);
 
     if (!found_waiting) {
       LOGGER.warning("to_resolve has something but there is no waiting here");

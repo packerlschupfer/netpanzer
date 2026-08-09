@@ -19,4 +19,4 @@
 #include <windows.h>
 #endif
 // Maybe Resolves "undefined reference to WinMain"
-#include <SDL.h>
+#include <SDL3/SDL.h>

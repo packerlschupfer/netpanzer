@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "MouseInterface.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "Util/Exception.hpp"
 #include "Util/FileSystem.hpp"
@@ -81,7 +81,7 @@ void MouseInterface::onMouseButtonDown(SDL_MouseButtonEvent* e) {
   clickcount++;
 
   MouseEvent event;
-  button_mask |= SDL_BUTTON(e->button);
+  button_mask |= SDL_BUTTON_MASK(e->button);
   event.button = e->button;
   event.event = MouseEvent::EVENT_DOWN;
   event.pos.x = e->x;
@@ -95,7 +95,7 @@ void MouseInterface::onMouseButtonUp(SDL_MouseButtonEvent* e) {
   }
 
   MouseEvent event;
-  button_mask &= ~(SDL_BUTTON(e->button));
+  button_mask &= ~(SDL_BUTTON_MASK(e->button));
   event.button = e->button;
   event.event = MouseEvent::EVENT_UP;
   event.pos.x = e->x;

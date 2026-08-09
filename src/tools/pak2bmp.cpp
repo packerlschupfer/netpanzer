@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <cstdlib>
 #include <iomanip>
@@ -95,13 +95,21 @@ int main(int argc, char *argv[]) {
 
   Surface unpacked(pak.getWidth(), pak.getHeight(), 1);
 
-  SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(
-      unpacked.getFrame0(), unpacked.getWidth(), unpacked.getHeight(), 8,
-      unpacked.getPitch(), 0, 0, 0, 0);
+  // SDL3 merged the RGB-mask and format variants and reordered the
+  // parameters: dimensions and format first, then the pixels.
+  SDL_Surface *surf = SDL_CreateSurfaceFrom(
+      unpacked.getWidth(), unpacked.getHeight(), SDL_PIXELFORMAT_INDEX8,
+      unpacked.getFrame0(), unpacked.getPitch());
 
   if (!surf) {
     // It said "we will die" and then carried on to dereference surf anyway.
     printf("surface is null: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  // Indexed surfaces get no palette implicitly in SDL3.
+  if (!SDL_CreateSurfacePalette(surf)) {
+    printf("couldn't attach a palette: %s\n", SDL_GetError());
     return 1;
   }
 
@@ -122,7 +130,7 @@ int main(int argc, char *argv[]) {
            filesystem::getRealWriteName(ofile.str().c_str()).c_str());
   }
 
-  SDL_FreeSurface(surf);
+  SDL_DestroySurface(surf);
 
   PHYSFS_deinit();
   printf("Exited cleanly\n");

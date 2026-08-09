@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _SURFACEPALETTE_HPP
 #define _SURFACEPALETTE_HPP
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 /**
  * The palette of an indexed SDL_Surface.
@@ -33,13 +33,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * edit rather than a hunt through the drawing code.
  */
 inline SDL_Palette *getSurfacePalette(SDL_Surface *surface) {
-  if (surface == 0 || surface->format == 0) return 0;
-  return surface->format->palette;
+  if (surface == 0) return 0;
+  return SDL_GetSurfacePalette(surface);
 }
 
 inline const SDL_Palette *getSurfacePalette(const SDL_Surface *surface) {
-  if (surface == 0 || surface->format == 0) return 0;
-  return surface->format->palette;
+  if (surface == 0) return 0;
+  return SDL_GetSurfacePalette(const_cast<SDL_Surface *>(surface));
 }
 
 #endif  // _SURFACEPALETTE_HPP

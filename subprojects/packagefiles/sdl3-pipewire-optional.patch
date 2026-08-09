@@ -1,0 +1,36 @@
+--- a/meson.build
++++ b/meson.build
+@@ -309,7 +309,13 @@
+   cdata.set('SDL_TIMER_UNIX', 1)
+   sdl_deps += dependency('libudev')
+   sdl_deps += dependency('dbus-1')
+-  sdl_deps += dependency('libpipewire-0.3')
++  # PipeWire is one audio backend among several; SDL builds fine without it
++  # and picks ALSA or PulseAudio instead. Requiring it unconditionally makes
++  # the subproject unbuildable anywhere the -dev package is absent.
++  pipewire_dep = dependency('libpipewire-0.3', required: false)
++  if pipewire_dep.found()
++    sdl_deps += pipewire_dep
++  endif
+   sdl_deps += dependency('wayland-client')
+   sdl_deps += dependency('wayland-egl')
+   sdl_deps += dependency('wayland-cursor')
+--- a/src/audio/meson.build
++++ b/src/audio/meson.build
+@@ -7,8 +7,14 @@
+   cdata.set('SDL_AUDIO_DRIVER_COREAUDIO', 1)
+   subdir('coreaudio')
+ else
+-  cdata.set('SDL_AUDIO_DRIVER_PIPEWIRE', 1)
+-  subdir('pipewire')
++  # PipeWire is the only audio driver this port builds on Linux, and it is
++  # not optional upstream: without the -dev package the build fails on a
++  # missing pipewire/pipewire.h. Gate it on the dependency actually being
++  # present so SDL still builds (with no audio driver) elsewhere.
++  if pipewire_dep.found()
++    cdata.set('SDL_AUDIO_DRIVER_PIPEWIRE', 1)
++    subdir('pipewire')
++  endif
+ endif
+ 
+ sources += files(

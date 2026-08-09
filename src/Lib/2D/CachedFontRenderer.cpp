@@ -87,17 +87,21 @@ SDL_Surface *CachedFontRenderer::render(const char *text, SDL_Color color, SDL_C
   auto it = rendered_surfaces.find(key);
   if (it != rendered_surfaces.end()) {
     // Return the cached surface
-    it->second.lastUsedTick = SDL_GetTicks64();
+    it->second.lastUsedTick = SDL_GetTicks();
     return it->second.sdlSurface;
   }
 
   // If not found, render the text
-  SDL_Surface *rendered_surface = wrapped
-          ? TTF_RenderUTF8_Shaded_Wrapped(CachedFontRenderer::font, text, color, blendColor, wrapLength)
-          : TTF_RenderUTF8_Shaded(CachedFontRenderer::font, text, color, blendColor);
+  // SDL_ttf 3 dropped the UTF8 suffix -- all text is UTF-8 now -- and takes an
+  // explicit length, where 0 means "NUL-terminated".
+  SDL_Surface *rendered_surface =
+      wrapped ? TTF_RenderText_Shaded_Wrapped(CachedFontRenderer::font, text, 0,
+                                              color, blendColor, wrapLength)
+              : TTF_RenderText_Shaded(CachedFontRenderer::font, text, 0, color,
+                                      blendColor);
   if (rendered_surface) {
     // Store the rendered surface in the cache
-    RenderedText rendered_text(rendered_surface, SDL_GetTicks64());
+    RenderedText rendered_text(rendered_surface, SDL_GetTicks());
     rendered_surfaces[key] = rendered_text;
   }
 
@@ -113,7 +117,7 @@ SDL_Surface *CachedFontRenderer::renderWrapped(const char *text, SDL_Color color
 }
 
 void CachedFontRenderer::cleanup() {
-  const Uint64 currentTick = SDL_GetTicks64();
+  const Uint64 currentTick = SDL_GetTicks();
   const Uint64 cleanupThreshold = 20000;
 
   if (currentTick - lastCleanedTick < cleanupThreshold) {
@@ -126,7 +130,7 @@ void CachedFontRenderer::cleanup() {
   for (auto it = rendered_surfaces.begin(); it != rendered_surfaces.end();) {
     Uint64 lastUsedTick = it->second.lastUsedTick;
     if (currentTick - lastUsedTick > cleanupThreshold) {
-      SDL_FreeSurface(it->second.sdlSurface);  // Free SDL surface memory
+      SDL_DestroySurface(it->second.sdlSurface);  // Free SDL surface memory
       it = rendered_surfaces.erase(it);        // Remove the entry from the map
     } else {
       ++it;

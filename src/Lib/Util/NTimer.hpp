@@ -19,9 +19,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _NTIMER_HPP_
 #define _NTIMER_HPP_
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
-// Times are 64-bit and read through SDL_GetTicks64 (SDL >= 2.0.18, which this
+// Times are 64-bit and read through SDL_GetTicks (SDL >= 2.0.18, which this
 // project already requires). SDL_GetTicks() wraps after 49.7 days, and
 // "starttime + timeout" wrapped with it, so on a server up that long
 // isTimeOut() started returning true immediately and kept doing so. 64 bits
@@ -32,7 +32,7 @@ class NTimer {
   NTimer() : starttime(0), timeout(0) {}
   NTimer(Uint64 t) : starttime(0), timeout(t) {}
 
-  inline void reset() { starttime = SDL_GetTicks64(); }
+  inline void reset() { starttime = SDL_GetTicks(); }
   inline void reset(Uint64 t) { starttime = t; }
 
   inline Uint64 getStartTime() { return starttime; }
@@ -41,10 +41,10 @@ class NTimer {
 
   inline Uint64 getTimeOut() { return timeout; }
 
-  inline bool isTimeOut() { return (starttime + timeout) < SDL_GetTicks64(); }
+  inline bool isTimeOut() { return (starttime + timeout) < SDL_GetTicks(); }
   inline bool isTimeOut(Uint64 t) { return (starttime + timeout) < t; }
   inline bool checkWithTimeOut(Uint64 tout) {
-    return (starttime + tout) < SDL_GetTicks64();
+    return (starttime + tout) < SDL_GetTicks();
   }
 
  private:

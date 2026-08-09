@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef __SERVERQUERYTHREAD_HPP__
 #define __SERVERQUERYTHREAD_HPP__
 
-#include <SDL_thread.h>
+#include <SDL3/SDL_thread.h>
 
 #include <map>
 #include <string>

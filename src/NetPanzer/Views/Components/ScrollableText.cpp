@@ -30,7 +30,7 @@ void ScrollableText::setScrolling(bool isScrolling, int8_t newDirection) {
     scrollStartTime = 0;
     return;
   }
-  scrollStartTime = SDL_GetTicks64();
+  scrollStartTime = SDL_GetTicks();
   direction = newDirection;
 };
 
@@ -39,7 +39,7 @@ void ScrollableText::scroll() {
     return;
   }
   int amount = 20;
-  const uint64_t delta = SDL_GetTicks64() - scrollStartTime;
+  const uint64_t delta = SDL_GetTicks() - scrollStartTime;
   if (delta > 200) {
     amount = 35;
   }

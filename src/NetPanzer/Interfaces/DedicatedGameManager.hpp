@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _DEDICATEDGAMEMANAGER_HPP
 #define _DEDICATEDGAMEMANAGER_HPP
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <queue>
 
@@ -55,7 +55,7 @@ class DedicatedGameManager : public BaseGameManager {
 
  private:
   std::queue<ServerCommand> commandqueue;
-  SDL_mutex* commandqueue_mutex;
+  SDL_Mutex* commandqueue_mutex;
 
   ServerConsole* console;
   Heartbeat* heartbeat;

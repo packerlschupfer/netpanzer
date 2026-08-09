@@ -16,7 +16,7 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <ctype.h>
 
 #include "2D/Palette.hpp"
@@ -32,19 +32,19 @@ bool handleSDLEvents() {
   KeyboardInterface::sampleKeyboard();
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT:
         return true;
         break;
-      case SDL_MOUSEBUTTONDOWN:
+      case SDL_EVENT_MOUSE_BUTTON_DOWN:
         MouseInterface::onMouseButtonDown(&event.button);
         break;
-      case SDL_MOUSEBUTTONUP:
+      case SDL_EVENT_MOUSE_BUTTON_UP:
         MouseInterface::onMouseButtonUp(&event.button);
         break;
-      case SDL_MOUSEMOTION:
+      case SDL_EVENT_MOUSE_MOTION:
         MouseInterface::onMouseMoved(&event.motion);
         break;
-      case SDL_TEXTINPUT: {
+      case SDL_EVENT_TEXT_INPUT: {
         size_t text_length = strlen(event.text.text);
 
         for (size_t i = 0; i < text_length; i++) {
@@ -52,12 +52,12 @@ bool handleSDLEvents() {
         }
         break;
       }
-      case SDL_KEYDOWN: {
+      case SDL_EVENT_KEY_DOWN: {
         //                LOGGER.info("Pressed key : scancode[%d] keycode[%d]",
-        //                event.key.keysym.scancode, event.key.keysym.sym);
-        KeyboardInterface::keyPressed(event.key.keysym.sym);
+        //                event.key.scancode, event.key.key);
+        KeyboardInterface::keyPressed(event.key.key);
 
-        SDL_Keycode c = event.key.keysym.sym;
+        SDL_Keycode c = event.key.key;
         switch (c) {
           // see cInputField
           case SDLK_HOME:
@@ -80,11 +80,11 @@ bool handleSDLEvents() {
 
         break;
       }
-      case SDL_KEYUP:
+      case SDL_EVENT_KEY_UP:
         //                LOGGER.debug("Released key : scancode[%d]
-        //                keycode[%d]", event.key.keysym.scancode,
-        //                event.key.keysym.sym);
-        KeyboardInterface::keyReleased(event.key.keysym.sym);
+        //                keycode[%d]", event.key.scancode,
+        //                event.key.key);
+        KeyboardInterface::keyReleased(event.key.key);
         break;
     }
   }

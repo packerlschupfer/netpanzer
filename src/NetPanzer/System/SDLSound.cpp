@@ -17,14 +17,14 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
 
 #include <algorithm>
 #define USE_RWOPS  // we want Mix_LOadMUS_RW
-#include <SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include <chrono>
 #include <random>
@@ -69,9 +69,8 @@ musics_t::iterator SDLSound::currentsong;
 
 //-----------------------------------------------------------------
 SDLSound::SDLSound() : Sound(), m_chunks() {
-  // "< 0" is the SDL2 convention; in SDL3 this returns bool and the test
-  // would be permanently false, quietly ignoring a failed audio init.
-  if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
+  // SDL3 returns true on success here, where SDL2 returned 0.
+  if (!SDL_InitSubSystem(SDL_INIT_AUDIO))
     throw Exception("SDL_Init audio error: %s", SDL_GetError());
 
   if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) < 0)

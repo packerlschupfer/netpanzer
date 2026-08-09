@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <unistd.h>
 #endif
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
@@ -229,10 +229,10 @@ BaseGameManager* initialise(int argc, char** argv) {
   }
 
   // Initialize SDL (don't initialize video or audio for dedicated servers)
-  // See the note in SDLVideo: the 0-on-success convention is SDL2's, so the
-  // comparison is explicit and will not silently invert under SDL3.
+  // SDL3 dropped SDL_INIT_TIMER -- the timer subsystem is always available --
+  // and returns true on success rather than 0.
   if (dedicated_option.value() &&
-      SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS) != 0) {
+      !SDL_Init(SDL_INIT_EVENTS)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s",
                  SDL_GetError());
     exit(1);
@@ -258,7 +258,7 @@ BaseGameManager* initialise(int argc, char** argv) {
       exit(EXIT_FAILURE);
   }
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
   // Mac OS X puts the data files into NetPanzer.app/Contents/Resources
   try {
     std::ostringstream dir;

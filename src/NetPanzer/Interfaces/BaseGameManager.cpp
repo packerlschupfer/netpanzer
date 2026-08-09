@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "BaseGameManager.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 // ** PObject netPanzer Network Includes
 #include "2D/ColorTable.hpp"
@@ -197,7 +197,7 @@ void BaseGameManager::sleeping() {
 
   if (FrameBench::skipSleep()) return;
 
-  Uint64 now = SDL_GetTicks64();
+  Uint64 now = SDL_GetTicks();
   if (now < nextTime) {
     SDL_Delay((Uint32)(nextTime - now));
   }
@@ -209,7 +209,7 @@ void BaseGameManager::sleeping() {
   // the loop spins with no sleep at all until the accumulated debt is burned
   // off at full speed. Clamping degrades to "run at the real frame rate"
   // instead.
-  now = SDL_GetTicks64();
+  now = SDL_GetTicks();
   if (nextTime < now) {
     nextTime = now;
   }

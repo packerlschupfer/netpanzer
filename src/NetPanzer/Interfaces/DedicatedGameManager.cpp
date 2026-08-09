@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "DedicatedGameManager.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -89,7 +89,7 @@ void DedicatedGameManager::initializeInputDevices() {
 //-----------------------------------------------------------------
 void DedicatedGameManager::inputLoop() {
   // handle server commands
-  SDL_mutexP(commandqueue_mutex);
+  SDL_LockMutex(commandqueue_mutex);
   while (!commandqueue.empty()) {
     const ServerCommand& command = commandqueue.front();
 
@@ -157,7 +157,7 @@ void DedicatedGameManager::inputLoop() {
     }
     commandqueue.pop();
   }
-  SDL_mutexV(commandqueue_mutex);
+  SDL_UnlockMutex(commandqueue_mutex);
   BaseGameManager::inputLoop();
 }
 
@@ -299,9 +299,9 @@ bool DedicatedGameManager::mainLoop() {
 
 //-----------------------------------------------------------------
 void DedicatedGameManager::pushCommand(const ServerCommand& command) {
-  SDL_mutexP(commandqueue_mutex);
+  SDL_LockMutex(commandqueue_mutex);
   commandqueue.push(command);
-  SDL_mutexV(commandqueue_mutex);
+  SDL_UnlockMutex(commandqueue_mutex);
 }
 
 //-----------------------------------------------------------------

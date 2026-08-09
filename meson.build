@@ -104,89 +104,36 @@ if not phyfs_dep.found()
 endif
 deps += phyfs_dep
 
-sdl2_dep = dependency('SDL2', version: '>=2.0.18', required: false)
-if not sdl2_dep.found()
-  sdl2_dep = cc.find_library('SDL2', has_headers: 'SDL.h', required: false)
-  if not sdl2_dep.found()
-    # This will use the fallback
-    sdl2_dep = dependency(
-      'sdl2',
-      version: '>=2.0.18',
-      required: true,
-      fallback: 'sdl2',
-      default_options: ['default_library=static', 'test=false'])
-  endif
+sdl3_dep = dependency('sdl3', version: '>=3.2.0', required: false)
+if not sdl3_dep.found()
+  sdl3_dep = dependency(
+    'sdl3',
+    version: '>=3.2.0',
+    required: true,
+    fallback: 'sdl3',
+    default_options: ['default_library=static'])
 endif
-deps += sdl2_dep
+deps += sdl3_dep
+sdl2_dep = sdl3_dep
 
+# SDL3 has no separate SDL2main library.
 sdl2main_dep = []
-if platform_is_windows
-  sdl2main_dep = dependency('SDL2_main', required: false)
-  if not sdl2main_dep.found()
-    sdl2main_dep = cc.find_library('SDL2_main', has_headers: 'SDL_main.h', required: false)
-    if not sdl2main_dep.found()
-      # This will use the fallback
-      sdl2main_dep = dependency(
-        'sdl2main',
-        required: true,
-        fallback: 'sdl2',
-        default_options: ['default_library=static'])
-    endif
-  endif
-endif
+
 # Don't add to deps, but add it to netpanzer_dep when the dependency is declared
 
-sdl2_ttf_dep = dependency('SDL2_ttf', version: '>=2.1', required: false)
+sdl2_ttf_dep = dependency('sdl3-ttf', required: false)
 if not sdl2_ttf_dep.found()
-  sdl2_ttf_dep = cc.find_library('SDL2_ttf', has_headers: 'SDL_ttf.h', required: false)
-  if not sdl2_ttf_dep.found()
-
-# Freetype configuration must happen first, otherwise using the freetype2 default_options
-# won't work because it will have been configured by sdl2_ttf.
-# zlib and png are enabled by default by the SDL2_ttf meson wrap, but not required
-# by NetPanzer.
-    freetype2_dep = dependency('freetype2', required: false)
-    if not freetype2_dep.found()
-      freetype2_dep = cc.find_library(
-        'freetype2',
-        has_headers: 'freetype.h',
-        required: false
-        )
-      if not freetype2_dep.found()
-        freetype2_dep = dependency(
-          'freetype2',
-          required: true,
-          fallback: 'freetype2',
-          default_options: ['default_library=static', 'png=disabled', 'zlib=disabled'])
-      endif
-    endif
-    deps += freetype2_dep
-
-    sdl2_ttf_dep = dependency(
-      'sdl2_ttf',
-      version: '>=2.1',
-      required: true,
-      fallback: 'sdl2_ttf',
-      default_options: ['default_library=static']
-      )
-  endif
+  sdl2_ttf_dep = dependency(
+    'sdl3_ttf',
+    required: true,
+    fallback: 'sdl3_ttf',
+    default_options: ['default_library=static'])
 endif
 deps += sdl2_ttf_dep
 
-sdl2_mixer_dep = dependency('SDL2_mixer', required: false)
-if not sdl2_mixer_dep.found()
-  sdl2_mixer_dep = cc.find_library('SDL2_mixer', has_headers: 'SDL_mixer.h', required: false)
-  if not sdl2_mixer_dep.found()
-    # This will use the fallback
-    sdl2_mixer_dep = dependency(
-      'sdl2_mixer',
-      required: true,
-      fallback: 'sdl2_mixer',
-      default_options: ['default_library=static']
-      )
-  endif
-endif
-deps += sdl2_mixer_dep
+# SDL3_mixer is not in wrapdb and its API is a redesign rather than a rename,
+# so audio is stubbed out in this pass and SDLSound is not built. The game
+# falls back to DummySound.
 
 inc_dirs = [include_directories('.')]
 

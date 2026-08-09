@@ -90,7 +90,7 @@ typedef int SOCKET;
 #define IS_INVALID_SOCKET(code) (code == EBADF)
 #define IS_INTERRUPTED(code) (code == EINTR)
 #define SETSOCKOPT_PARAMTYPE int
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
 #define SEND_FLAGS 0
 #define RECV_FLAGS 0
 #else

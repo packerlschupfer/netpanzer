@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef __SERVERLIST_HPP__
 #define __SERVERLIST_HPP__
 
-#include <SDL_mutex.h>
+#include <SDL3/SDL_mutex.h>
 
 #include <vector>
 

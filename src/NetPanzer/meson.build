@@ -218,7 +218,7 @@ src_basename = [
   'DummySound.cpp',
   'SDLEvents.cpp',
   'Sound.cpp',
-  'SDLSound.cpp'
+
 ]
 foreach file : src_basename
   src += [join_paths('System', file)]

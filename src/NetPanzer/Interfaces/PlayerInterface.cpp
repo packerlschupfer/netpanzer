@@ -42,7 +42,7 @@ PlayerID PlayerInterface::local_player_index = INVALID_PLAYER_ID;
 
 PlayerID PlayerInterface::respawn_rule_player_index = INVALID_PLAYER_ID;
 
-SDL_mutex* PlayerInterface::mutex = 0;
+SDL_Mutex* PlayerInterface::mutex = 0;
 
 static void setAlliance(PlayerID by_player, PlayerID with_player) {
   *(alliance_matrix + (by_player * PlayerInterface::getMaxPlayers()) +
@@ -217,46 +217,46 @@ void PlayerInterface::cleanUp() {
   mutex = 0;
 }
 
-void PlayerInterface::lock() { SDL_mutexP(mutex); }
+void PlayerInterface::lock() { SDL_LockMutex(mutex); }
 
-void PlayerInterface::unLock() { SDL_mutexV(mutex); }
+void PlayerInterface::unLock() { SDL_UnlockMutex(mutex); }
 
 void PlayerInterface::setKill(PlayerState* by_player, PlayerState* on_player,
                               UnitType unit_type) {
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   by_player->incKills(unit_type);
   on_player->incLosses(unit_type);
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 }
 
 void PlayerInterface::lockPlayerStats() {
   PlayerID player_id;
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   for (player_id = 0; player_id < max_players; ++player_id) {
     player_lists[player_id].lockStats();
   }  // ** for
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 }
 
 void PlayerInterface::unlockPlayerStats() {
   PlayerID player_id;
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   for (player_id = 0; player_id < max_players; ++player_id) {
     player_lists[player_id].unlockStats();
   }  // ** for
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 }
 
 void PlayerInterface::resetPlayerStats(bool keepAdmin) {
   PlayerID player_id;
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   for (player_id = 0; player_id < max_players; ++player_id) {
     player_lists[player_id].resetStats(keepAdmin);
   }  // ** for
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 }
 
 int PlayerInterface::getActivePlayerCount() {
@@ -273,10 +273,10 @@ int PlayerInterface::getActivePlayerCount() {
 PlayerState* PlayerInterface::allocateLoopBackPlayer() {
   local_player_index = 0;
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   player_lists[local_player_index].setStateSelectingFlag();
   player_lists[local_player_index].unit_config.initialize();
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 
   return &player_lists[local_player_index];
 }
@@ -294,7 +294,7 @@ PlayerState* PlayerInterface::allocateNewPlayer() {
   PlayerID player_id;
   PlayerState* res = 0;
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   for (player_id = 0; player_id < max_players; ++player_id) {
     if (player_lists[player_id].isFree()) {
       player_lists[player_id].setStateAllocated();
@@ -304,19 +304,19 @@ PlayerState* PlayerInterface::allocateNewPlayer() {
       break;
     }
   }
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 
   return (res);
 }
 
 void PlayerInterface::spawnPlayer(PlayerID player_id, const iXY& location) {
   if (player_id < max_players) {
-    SDL_mutexP(mutex);
+    SDL_LockMutex(mutex);
     if (!player_lists[player_id].isFree()) {
       UnitInterface::spawnPlayerUnits(location, player_id,
                                       player_lists[player_id].unit_config);
     }  // ** if _player_state_active
-    SDL_mutexV(mutex);
+    SDL_UnlockMutex(mutex);
   }
 }
 
@@ -418,10 +418,10 @@ void PlayerInterface::netMessageConnectID(const NetMessage* message) {
       return;
     }
 
-    //    SDL_mutexP(mutex);
+    //    SDL_LockMutex(mutex);
     //    player_lists[local_player_index].setFromNetworkPlayerState
     //        (&connect_mesg->connect_state);
-    //    SDL_mutexV(mutex);
+    //    SDL_UnlockMutex(mutex);
   }
 }
 
@@ -437,7 +437,7 @@ void PlayerInterface::netMessageSyncState(const NetMessage* message) {
       return;
     }
 
-    SDL_mutexP(mutex);
+    SDL_LockMutex(mutex);
     player_lists[player_id].setFromNetworkPlayerState(&sync_mesg->player_state);
     // XXX ALLY
     if (player_lists[player_id].isFree()) {
@@ -448,7 +448,7 @@ void PlayerInterface::netMessageSyncState(const NetMessage* message) {
       // Desktop::setVisibility("UStyleSelectionView", true);
       Desktop::setVisibility("GFlagSelectionView", true);
     }
-    SDL_mutexV(mutex);
+    SDL_UnlockMutex(mutex);
   }
 }
 
@@ -486,11 +486,11 @@ void PlayerInterface::netMessageAllianceRequest(const NetMessage* message) {
     return;
   }
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   handleAllianceMessage(allie_request->alliance_request_type,
                         allie_request->getAllieByPlayerIndex(),
                         allie_request->getAllieWithPlayerIndex());
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 
   PlayerAllianceUpdate allie_update;
   allie_update.set(allie_request->getAllieByPlayerIndex(),
@@ -517,11 +517,11 @@ void PlayerInterface::netMessageAllianceUpdate(const NetMessage* message) {
     return;
   }
 
-  SDL_mutexP(mutex);
+  SDL_LockMutex(mutex);
   handleAllianceMessage(allie_update->alliance_update_type,
                         allie_update->getAllieByPlayerIndex(),
                         allie_update->getAllieWithPlayerIndex());
-  SDL_mutexV(mutex);
+  SDL_UnlockMutex(mutex);
 }
 
 void PlayerInterface::netMessageStyleUpdate(const NetMessage* message,
@@ -617,7 +617,7 @@ void PlayerInterface::processNetMessage(const NetPacket* packet) {
 void PlayerInterface::disconnectPlayerCleanup(PlayerID player_id) {
   PlayerState* player_state = getPlayer(player_id);
   if (player_state) {
-    SDL_mutexP(mutex);
+    SDL_LockMutex(mutex);
 
     // XXX ALLY
     disconnectedPlayerAllianceCleanup(player_id);
@@ -627,7 +627,7 @@ void PlayerInterface::disconnectPlayerCleanup(PlayerID player_id) {
 
     PlayerStateSync player_state_update(player_state->getNetworkPlayerState());
 
-    SDL_mutexV(mutex);
+    SDL_UnlockMutex(mutex);
 
     SERVER->broadcastMessage(&player_state_update, sizeof(PlayerStateSync));
   }

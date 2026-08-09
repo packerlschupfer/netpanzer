@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef __LIB_FILESYSTEM_HPP__
 #define __LIB_FILESYSTEM_HPP__
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <stdlib.h>
 
 #include <stdexcept>
@@ -78,20 +78,24 @@ class ReadFile : public File {
 
   void readLine(std::string& buffer);
 
-  // Returns the SDL_RWops structure which can be used in several SDL
+  // Returns the SDL_IOStream structure which can be used in several SDL
   // commands. Note that you have to free this structure with SDL_FreeRWops.
   // (Most SDL commands also have a freesrc parameter in their calls which you
   // can simply set to 1)
-  SDL_RWops* getSDLRWOps();
+  SDL_IOStream* getSDLRWOps();
 
   /** for internal use only */
   ReadFile(PHYSFS_file* file);
 
  private:
-  static size_t RWOps_Read(SDL_RWops* context, void* ptr, size_t size,
-                           size_t maxnum);
-  static Sint64 RWOps_Seek(SDL_RWops* context, Sint64 offset, int whence);
-  static int RWOps_Close(SDL_RWops* context);
+  // SDL3 callbacks take the userdata pointer rather than the stream, and
+  // report partial transfers through SDL_IOStatus.
+  static Sint64 RWOps_Size(void* userdata);
+  static size_t RWOps_Read(void* userdata, void* ptr, size_t size,
+                           SDL_IOStatus* status);
+  static Sint64 RWOps_Seek(void* userdata, Sint64 offset,
+                           SDL_IOWhence whence);
+  static bool RWOps_Close(void* userdata);
 };
 
 //---------------------------------------------------------------------------

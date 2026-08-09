@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Heartbeat.hpp"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -79,7 +79,7 @@ Heartbeat::~Heartbeat() {
 }
 
 void Heartbeat::checkHeartbeat() {
-  Uint64 now = SDL_GetTicks64();
+  Uint64 now = SDL_GetTicks();
 
   if (!masterservers.empty()) {
     std::map<TCPSocket *, MasterserverInfo *>::iterator msiter;
@@ -101,7 +101,7 @@ void Heartbeat::checkHeartbeat() {
 
 void Heartbeat::startHeartbeat() {
   std::vector<Address>::iterator iter = mslist.begin();
-  Uint64 now = SDL_GetTicks64();
+  Uint64 now = SDL_GetTicks();
   while (iter != mslist.end()) {
     TCPSocket *s = nullptr;
     MasterserverInfo *msi = nullptr;

@@ -57,7 +57,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Particles/Physics.hpp"
 #include "PowerUps/PowerUpInterface.hpp"
 #include "System/DummySound.hpp"
-#include "System/SDLSound.hpp"
 #include "System/SDLVideo.hpp"
 #include "System/Sound.hpp"
 #include "Units/UnitBlackBoard.hpp"

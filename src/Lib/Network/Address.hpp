@@ -52,7 +52,7 @@ class Address {
 
   struct sockaddr* getSockaddr() const { return (struct sockaddr*)&ss; };
   socklen_t getSockaddrLen() const {
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     return sizeof(sockaddr_in);
 #else
     return ss_len;

@@ -62,10 +62,8 @@ SDLVideo::SDLVideo() : window(0) {
   this->have_prev_frame = false;
   memset(this->prev_lut, 0, sizeof(this->prev_lut));
   this->is_fullscreen = false;
-  // Spelled out rather than relying on the truthiness of the result: SDL2
-  // returns 0 on success here, SDL3 returns true, so an implicit test silently
-  // inverts across that upgrade instead of failing to compile.
-  if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+  // SDL3 returns true on success here, where SDL2 returned 0.
+  if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
     throw Exception("Couldn't initialize SDL_video subsystem: %s",
                     SDL_GetError());
   }
@@ -77,7 +75,7 @@ SDLVideo::~SDLVideo() {
     SDL_DestroyTexture(texture);
   }
   if (surface != nullptr) {
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
   }
   if (renderer != nullptr) {
     SDL_DestroyRenderer(renderer);
@@ -99,13 +97,13 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
     if (fullscreen) {
       // use the native desktop resolution, and scale linearly later using
       // renderer
-      window = SDL_CreateWindow(
-          Package::getFullyQualifiedName().c_str(), SDL_WINDOWPOS_UNDEFINED,
-          SDL_WINDOWPOS_UNDEFINED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
+      // SDL3 dropped the position arguments, and SDL_WINDOW_FULLSCREEN is
+      // now the borderless-desktop behaviour that _DESKTOP used to mean.
+      window = SDL_CreateWindow(Package::getFullyQualifiedName().c_str(), 0, 0,
+                                SDL_WINDOW_FULLSCREEN);
     } else {
-      window = SDL_CreateWindow(
-          Package::getFullyQualifiedName().c_str(), SDL_WINDOWPOS_UNDEFINED,
-          SDL_WINDOWPOS_UNDEFINED, new_width, new_height, 0);
+      window = SDL_CreateWindow(Package::getFullyQualifiedName().c_str(),
+                                new_width, new_height, 0);
     }
     if (window == nullptr) {
         LOGGER.warning("Couldn't create a window: %s", SDL_GetError());
@@ -117,7 +115,7 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
     SDL_RaiseWindow(window);
 
     LOGGER.debug("Creating new renderer.");
-    renderer = SDL_CreateRenderer(window, -1, 0);
+    renderer = SDL_CreateRenderer(window, nullptr);
 
     if (renderer == nullptr) {
         LOGGER.warning("Couldn't create renderer: %s", SDL_GetError());
@@ -133,16 +131,16 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
         // no change
       } else {
         LOGGER.debug("Setting fullscreen.");
-        const int setFullscreenResult = SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        if (setFullscreenResult < 0) {
+        const bool setFullscreenOk = SDL_SetWindowFullscreen(window, true);
+        if (!setFullscreenOk) {
             LOGGER.warning("Could not set fullscreen: %s", SDL_GetError());
         }
       }
     } else {
       if (was_fullscreen) {
         LOGGER.debug("Disabling fullscreen.");
-        const int disableFullScreenResult = SDL_SetWindowFullscreen(window, 0);
-        if (disableFullScreenResult < 0) {
+        const bool disableFullScreenOk = SDL_SetWindowFullscreen(window, false);
+        if (!disableFullScreenOk) {
             LOGGER.warning("Could not disable fullscreen: %s", SDL_GetError());
         }
       }
@@ -153,15 +151,22 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
 
   if (surface != nullptr) {
     LOGGER.debug("Cleaning up old surface.");
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
   }
 
   LOGGER.debug("Creating surface.");
-  surface = SDL_CreateRGBSurfaceWithFormat(0, new_width, new_height, 8,
-                                           SDL_PIXELFORMAT_INDEX8);
+  surface = SDL_CreateSurface(new_width, new_height, SDL_PIXELFORMAT_INDEX8);
 
   if (surface == nullptr) {
     LOGGER.warning("Couldn't create render surface: %s", SDL_GetError());
+    return false;
+  }
+
+  // Indexed surfaces do not carry a palette implicitly in SDL3; one has to be
+  // attached before setPalette() or the render loop can use it.
+  if (SDL_CreateSurfacePalette(surface) == nullptr) {
+    LOGGER.warning("Couldn't attach a palette to the render surface: %s",
+                   SDL_GetError());
     return false;
   }
 
@@ -187,11 +192,11 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
     return false;
   }
 
-  // make the scaled rendering look smoother.
-  // Note: "linear" made game look blurry when game resolution did not match
-  // monitor resolution.
-  LOGGER.debug("Setting render hints.");
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+  // Nearest-neighbour scaling: "linear" made the game look blurry whenever
+  // the game resolution did not match the monitor. In SDL3 this is a property
+  // of the texture rather than the global SDL_HINT_RENDER_SCALE_QUALITY hint.
+  SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+
 
   // With a logical size set, SDL scales incoming mouse coordinates into the
   // game's own resolution, so a click lands where the player aimed even when
@@ -207,9 +212,9 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   // event yields a nonsense delta. Every warp below goes through
   // warpMouse(), which converts back.
   LOGGER.debug("Setting render logical size.");
-  const int setLogicalSizeResult =
-      SDL_RenderSetLogicalSize(renderer, new_width, new_height);
-  if (setLogicalSizeResult < 0) {
+  const bool setLogicalSizeOk = SDL_SetRenderLogicalPresentation(
+      renderer, new_width, new_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  if (!setLogicalSizeOk) {
     LOGGER.warning("Couldn't set logical resolution: %d %d %s", new_width,
                    new_height, SDL_GetError());
   }
@@ -217,8 +222,8 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   // let's scare the mouse :)
   // this fixes the mouse cursor stuck to a small region after resolution change
   LOGGER.debug("Showing cursor.");
-  const int showCursorResult = SDL_ShowCursor(SDL_DISABLE);
-  if (showCursorResult < 0) {
+  const bool showCursorOk = SDL_HideCursor();
+  if (!showCursorOk) {
     LOGGER.warning("Couldn't show cursor: %s", SDL_GetError());
     // can still try to continue
   }
@@ -229,22 +234,22 @@ bool SDLVideo::setVideoMode(int new_width, int new_height, int bpp,
   int centerY = new_height / 2;
   LOGGER.debug("Warping mouse into window...");
   warpMouse(centerX, centerY);
-  SDL_SetWindowGrab(window, fullscreen ? SDL_TRUE : SDL_FALSE);
+  SDL_SetWindowMouseGrab(window, fullscreen);
   return true;
 }
 
 void SDLVideo::warpMouse(int logical_x, int logical_y) {
   if (window == nullptr) return;
 
-  // SDL_RenderSetLogicalSize scales the coordinates SDL reports, but
+  // SDL_SetRenderLogicalPresentation scales the coordinates SDL reports, but
   // SDL_WarpMouseInWindow still speaks window coordinates. Callers work in
   // game coordinates, so convert on the way out or the cursor lands
   // somewhere else entirely.
-  int window_x = logical_x;
-  int window_y = logical_y;
+  float window_x = (float)logical_x;
+  float window_y = (float)logical_y;
   if (renderer != nullptr) {
-    SDL_RenderLogicalToWindow(renderer, (float)logical_x, (float)logical_y,
-                              &window_x, &window_y);
+    SDL_RenderCoordinatesToWindow(renderer, (float)logical_x, (float)logical_y,
+                                  &window_x, &window_y);
   }
 
   SDL_WarpMouseInWindow(window, window_x, window_y);
@@ -362,7 +367,7 @@ void SDLVideo::render() {
   }
 
   SDL_RenderClear(renderer);
-  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+  SDL_RenderTexture(renderer, texture, nullptr, nullptr);
   SDL_RenderPresent(renderer);
 }
 

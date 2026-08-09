@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _MOUSEINTERFACE_HPP
 #define _MOUSEINTERFACE_HPP
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include <deque>
 #include <map>
@@ -32,8 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class MouseEvent {
  public:
   typedef enum {
-    EVENT_DOWN = SDL_MOUSEBUTTONDOWN,
-    EVENT_UP = SDL_MOUSEBUTTONUP
+    EVENT_DOWN = SDL_EVENT_MOUSE_BUTTON_DOWN,
+    EVENT_UP = SDL_EVENT_MOUSE_BUTTON_UP
   } MouseEventType;
   unsigned char button;
   MouseEventType event;
@@ -107,9 +107,14 @@ class MouseInterface {
 
   static void setCursor(const char *cursorname);
   static inline void onMouseMoved(SDL_MouseMotionEvent *e) {
+      // SDL3 reports mouse coordinates as float rather than Sint32, so they
+      // are clamped in their own type and narrowed once at the end. Doing it
+      // the other way round would truncate before the clamp.
       // min/max here keep cursor in window, always visible, even when we have black bars
-      mouse_pos.x = std::min(std::max(e->x, 0), (int) screen->getWidth());
-      mouse_pos.y = std::min(std::max(e->y, 0), (int) screen->getHeight());
+      const float max_x = (float) screen->getWidth();
+      const float max_y = (float) screen->getHeight();
+      mouse_pos.x = (int) std::min(std::max((float) e->x, 0.0f), max_x);
+      mouse_pos.y = (int) std::min(std::max((float) e->y, 0.0f), max_y);
   }
 
   static inline iXY getMousePosition() { return mouse_pos; }

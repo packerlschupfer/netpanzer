@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Interfaces/GameConfig.hpp"
 #include "Interfaces/GameManager.hpp"
 #include "System/DummySound.hpp"
-#include "System/SDLSound.hpp"
 #include "System/Sound.hpp"
 #include "Util/Exception.hpp"
 #include "Views/Components/Button.hpp"
@@ -146,16 +145,18 @@ std::vector<SDL_DisplayMode> OptionsTemplateView::getUsableDisplayModes() {
   if (!usableDisplayModes.empty()) {
     return usableDisplayModes;
   }
-  static int display_id = 0;
-  int display_mode_count = SDL_GetNumDisplayModes(display_id);
-  if (display_mode_count < 1) {
-    throw Exception("SDL_GetNumDisplayModes failed: %s", SDL_GetError());
+  // SDL3 returns the whole list at once for a display id, rather than a
+  // count plus indexed lookups.
+  const SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
+  int display_mode_count = 0;
+  SDL_DisplayMode **modes =
+      SDL_GetFullscreenDisplayModes(display_id, &display_mode_count);
+  if (modes == nullptr || display_mode_count < 1) {
+    SDL_free(modes);
+    throw Exception("SDL_GetFullscreenDisplayModes failed: %s", SDL_GetError());
   }
   for (int i = 0; i < display_mode_count; i++) {
-    SDL_DisplayMode mode;
-    if (SDL_GetDisplayMode(display_id, i, &mode) != 0) {
-      throw Exception("SDL_GetDisplayMode failed: %s", SDL_GetError());
-    }
+    SDL_DisplayMode mode = *modes[i];
 
     if (mode.w > 799 && mode.h > 599) {
       if (!hasSize(usableDisplayModes, mode.w, mode.h)) {
@@ -168,6 +169,9 @@ std::vector<SDL_DisplayMode> OptionsTemplateView::getUsableDisplayModes() {
     //                SDL_GetPixelFormatName(mode.format),
     //                mode.w, mode.h);
   }
+  // The array is ours to release; the SDL_DisplayMode values were copied out
+  // of it above.
+  SDL_free(modes);
   return usableDisplayModes;
 }
 
@@ -403,7 +407,7 @@ void OptionsTemplateView::stateChanged(Component *source) {
     GameConfig::video_width = mode.w;
     GameConfig::video_height = mode.h;
 
-#ifdef __APPLE__
+#ifdef SDL_PLATFORM_APPLE
     if (sel_index == 0 && !GameConfig::video_fullscreen) {
       // on Mac crash if we are in window and we select the biggest
       // resolution (the first one in theory), we make it smaller so it
@@ -436,7 +440,8 @@ void OptionsTemplateView::stateChanged(Component *source) {
     delete sound;
 
     if (checkBoxSoundEnabled->getState()) {
-      sound = new SDLSound();
+      // Audio is stubbed while the SDL3_mixer port is outstanding.
+      sound = new DummySound();
       checkBoxSoundEnabled->setLabel("Enabled");
       if (GameControlRulesDaemon::getGameState()) {
         sound->playTankIdle();

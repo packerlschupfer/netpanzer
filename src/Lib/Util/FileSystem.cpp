@@ -279,42 +279,59 @@ void ReadFile::read(void* buffer, size_t objsize, size_t objcount) {
 
 bool ReadFile::isEOF() { return PHYSFS_eof(file); }
 
-SDL_RWops* ReadFile::getSDLRWOps() {
-  SDL_RWops* rwops = (SDL_RWops*)malloc(sizeof(SDL_RWops));
-  memset(rwops, 0, sizeof(SDL_RWops));
-  rwops->read = RWOps_Read;
-  rwops->seek = RWOps_Seek;
-  rwops->close = RWOps_Close;
-  rwops->hidden.unknown.data1 = this;
+SDL_IOStream* ReadFile::getSDLRWOps() {
+  // SDL3 makes SDL_IOStream opaque: instead of filling in a struct's function
+  // pointers, the callbacks go in an SDL_IOStreamInterface and SDL_OpenIO
+  // builds the stream around them, carrying our "this" as userdata.
+  SDL_IOStreamInterface iface;
+  SDL_INIT_INTERFACE(&iface);
+  iface.size = RWOps_Size;
+  iface.seek = RWOps_Seek;
+  iface.read = RWOps_Read;
+  iface.close = RWOps_Close;
 
-  return rwops;
+  return SDL_OpenIO(&iface, this);
 }
 
-size_t ReadFile::RWOps_Read(SDL_RWops* context, void* ptr, size_t size,
-                            size_t maxnum) {
-  ReadFile* file = (ReadFile*)context->hidden.unknown.data1;
+Sint64 ReadFile::RWOps_Size(void* userdata) {
+  ReadFile* file = (ReadFile*)userdata;
   try {
-    file->read(ptr, size, maxnum);
+    return file->fileLength();
+  } catch (...) {
+    return -1;
+  }
+}
+
+size_t ReadFile::RWOps_Read(void* userdata, void* ptr, size_t size,
+                            SDL_IOStatus* status) {
+  ReadFile* file = (ReadFile*)userdata;
+  // SDL3 asks for a byte count rather than a count of objects, and wants
+  // short reads reported through status rather than inferred by the caller.
+  try {
+    file->read(ptr, 1, size);
   } catch (FileReadException& e) {
+    *status = SDL_IO_STATUS_EOF;
     return e.getReadCount();
   } catch (...) {
+    *status = SDL_IO_STATUS_ERROR;
     return 0;
   }
 
-  return maxnum;
+  return size;
 }
 
-Sint64 ReadFile::RWOps_Seek(SDL_RWops* context, Sint64 offset, int whence) {
-  ReadFile* file = (ReadFile*)context->hidden.unknown.data1;
+Sint64 ReadFile::RWOps_Seek(void* userdata, Sint64 offset,
+                            SDL_IOWhence whence) {
+  ReadFile* file = (ReadFile*)userdata;
   try {  // catch exceptions
     switch (whence) {
-      case SEEK_SET:
+      case SDL_IO_SEEK_SET:
         file->seek(offset);
         break;
-      case SEEK_CUR:
+      case SDL_IO_SEEK_CUR:
         file->seek(file->tell() + offset);
         break;
-      case SEEK_END:
+      case SDL_IO_SEEK_END:
         file->seek(file->fileLength() + offset);
         break;
     }
@@ -326,11 +343,10 @@ Sint64 ReadFile::RWOps_Seek(SDL_RWops* context, Sint64 offset, int whence) {
   return file->tell();
 }
 
-int ReadFile::RWOps_Close(SDL_RWops* context) {
-  ReadFile* file = (ReadFile*)context->hidden.unknown.data1;
+bool ReadFile::RWOps_Close(void* userdata) {
+  ReadFile* file = (ReadFile*)userdata;
   delete file;
-  context->hidden.unknown.data1 = 0;
-  return 1;
+  return true;
 }
 
 Sint8 ReadFile::read8() {

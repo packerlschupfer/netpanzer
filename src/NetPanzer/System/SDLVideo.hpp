@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef __SDLVideo_hpp__
 #define __SDLVideo_hpp__
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 // DirectDraw class declarations
 //---------------------------------------------------------------------------

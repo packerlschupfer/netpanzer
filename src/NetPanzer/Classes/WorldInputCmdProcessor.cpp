@@ -129,9 +129,10 @@ void WorldInputCmdProcessor::updateScrollStatus(const iXY &mouse_pos) {
   scroll_increment = (long)(scroll_rate * time_slice);
 
   if (right_mouse_scroll) {
-    int x, y;
-    int buttons = SDL_GetMouseState(&x, &y);
-    if (!(buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))) {
+    // SDL3 reports mouse position as float.
+    float x, y;
+    const SDL_MouseButtonFlags buttons = SDL_GetMouseState(&x, &y);
+    if (!(buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT))) {
       // sometimes the winning page or something comes up
       //  as you're holding down the right mouse button
       //  and the UP message doesn't come through
@@ -214,7 +215,7 @@ unsigned char WorldInputCmdProcessor::getCursorStatus(const iXY &loc) {
     // XXX ALLY
     if (!PlayerInterface::isAllied(unit->player->getID(),
                                    PlayerInterface::getLocalPlayerIndex())) {
-      if (KeyboardInterface::getKeyState(SDLK_a)) {
+      if (KeyboardInterface::getKeyState(SDLK_A)) {
         if (PlayerInterface::isSingleAllied(
                 PlayerInterface::getLocalPlayerIndex(),
                 unit->player->getID())) {
@@ -229,7 +230,7 @@ unsigned char WorldInputCmdProcessor::getCursorStatus(const iXY &loc) {
         return _cursor_enemy_unit;
       }
     } else {
-      if (KeyboardInterface::getKeyState(SDLK_a)) {
+      if (KeyboardInterface::getKeyState(SDLK_A)) {
         return _cursor_break_allie;
       }
     }
@@ -288,7 +289,7 @@ void WorldInputCmdProcessor::getManualControlStatus() {
 }
 
 void WorldInputCmdProcessor::evaluateKeyCommands() {
-  if (KeyboardInterface::getKeyPressed(SDLK_b) &&
+  if (KeyboardInterface::getKeyPressed(SDLK_B) &&
       !Desktop::getVisible("HelpScrollViewAlt") &&
       !Desktop::getVisible("UStyleSelectionView")) {
     if (PlayerInterface::getLocalPlayer()->isSelectingFlag() ||
@@ -301,7 +302,7 @@ void WorldInputCmdProcessor::evaluateKeyCommands() {
   if (((KeyboardInterface::getKeyState(SDLK_LSHIFT) == false) &&
        (KeyboardInterface::getKeyState(SDLK_RSHIFT) == false)) &&
       KeyboardInterface::getKeyPressed(
-          SDLK_m))  // &&
+          SDLK_M))  // &&
                     //(KeyboardInterface::getKeyState( SDLK_LALT ) == true ||
                     // KeyboardInterface::getKeyState( SDLK_RALT ) == true) )
   {
@@ -318,7 +319,7 @@ void WorldInputCmdProcessor::evaluateKeyCommands() {
   if (((KeyboardInterface::getKeyState(SDLK_LSHIFT)) ||
        (KeyboardInterface::getKeyState(SDLK_RSHIFT))) &&
       KeyboardInterface::getKeyPressed(
-          SDLK_m))  // &&
+          SDLK_M))  // &&
                     //(KeyboardInterface::getKeyState( SDLK_LALT ) == true ||
                     // KeyboardInterface::getKeyState( SDLK_RALT ) == true) )
   {
@@ -332,27 +333,27 @@ void WorldInputCmdProcessor::evaluateKeyCommands() {
     //}
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_o)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_O)) {
     toggleDisplayOutpostNames();
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_f)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_F)) {
     GameConfig::interface_show_flags = !GameConfig::interface_show_flags;
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_n)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_N)) {
     GameConfig::interface_show_names = !GameConfig::interface_show_names;
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_d)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_D)) {
     GameConfig::interface_show_health = !GameConfig::interface_show_health;
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_t)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_T)) {
     setKeyboardInputModeAllieChatMesg();
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_c)) {
+  if (KeyboardInterface::getKeyPressed(SDLK_C)) {
     static NTimer spamtimer(5000);
     if (spamtimer.isTimeOut()) {
       ScriptManager::runUserCommand("countdown 5 Prepare to fight...");
@@ -391,7 +392,7 @@ void WorldInputCmdProcessor::evaluateKeyCommands() {
     }
   }
 
-  if (KeyboardInterface::getKeyPressed(SDLK_u) &&
+  if (KeyboardInterface::getKeyPressed(SDLK_U) &&
       !Desktop::getVisible("HelpScrollViewAlt") &&
       !Desktop::getVisible("GFlagSelectionView")) {
     if (PlayerInterface::getLocalPlayer()->isSelectingFlag()) {
@@ -407,7 +408,7 @@ void WorldInputCmdProcessor::evaluateKeyCommands() {
 
   // if ( (KeyboardInterface::getKeyState(SDLK_LCTRL) ||
   // KeyboardInterface::getKeyState(SDLK_RCTRL))
-  //     && (KeyboardInterface::getKeyPressed(SDLK_a) ))
+  //     && (KeyboardInterface::getKeyPressed(SDLK_A) ))
   //{
   //     setKeyboardInputModeAllieChatMesg();
   // }
