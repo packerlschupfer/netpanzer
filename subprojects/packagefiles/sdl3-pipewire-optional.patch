@@ -17,7 +17,7 @@
    sdl_deps += dependency('wayland-cursor')
 --- a/src/audio/meson.build
 +++ b/src/audio/meson.build
-@@ -7,10 +7,25 @@
+@@ -7,10 +7,49 @@
    cdata.set('SDL_AUDIO_DRIVER_COREAUDIO', 1)
    subdir('coreaudio')
  else
@@ -30,6 +30,30 @@
 +  if pipewire_dep.found()
 +    cdata.set('SDL_AUDIO_DRIVER_PIPEWIRE', 1)
 +    subdir('pipewire')
++  endif
++
++  # ALSA and PulseAudio, which this port left out entirely -- it built
++  # PipeWire and nothing else, so a machine without the PipeWire -dev package
++  # ended up with no way to make a sound. Both are loaded by name at runtime
++  # rather than linked, which is how distributions ship SDL: the headers are
++  # needed to build, the shared object only has to be present to play.
++  alsa_dep = dependency('alsa', required: false)
++  if alsa_dep.found()
++    cdata.set('SDL_AUDIO_DRIVER_ALSA', 1)
++    cdata.set_quoted('SDL_AUDIO_DRIVER_ALSA_DYNAMIC', 'libasound.so.2')
++    sdl_deps += alsa_dep.partial_dependency(compile_args: true, includes: true)
++    subdir('alsa')
++  endif
++
++  pulse_dep = dependency('libpulse-simple', required: false)
++  if not pulse_dep.found()
++    pulse_dep = dependency('libpulse', required: false)
++  endif
++  if pulse_dep.found()
++    cdata.set('SDL_AUDIO_DRIVER_PULSEAUDIO', 1)
++    cdata.set_quoted('SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC', 'libpulse.so.0')
++    sdl_deps += pulse_dep.partial_dependency(compile_args: true, includes: true)
++    subdir('pulseaudio')
 +  endif
  endif
  

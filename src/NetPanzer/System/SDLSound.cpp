@@ -73,6 +73,16 @@ SDLSound::SDLSound() : Sound(), m_chunks(), effects_gain(1.0f) {
 
   if (!MIX_Init()) throw Exception("Couldn't init mixer: %s", SDL_GetError());
 
+  // Worth a line in the log: if SDL was built without a real backend it falls
+  // back to the "dummy" driver, where every call succeeds and nothing is
+  // audible. Without this the only symptom is silence.
+  const char *driver = SDL_GetCurrentAudioDriver();
+  LOGGER.info("Audio driver: %s", driver ? driver : "(none)");
+  if (driver && SDL_strcmp(driver, "dummy") == 0)
+    LOGGER.warning(
+        "Audio driver is 'dummy' -- there will be no sound. SDL was built "
+        "without a working audio backend, or no sound server is running.");
+
   // SDL3_mixer opens a device and hands back a mixer, rather than keeping a
   // single global one. Passing a null spec lets it pick the device's format.
   mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
