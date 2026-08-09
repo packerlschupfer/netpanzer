@@ -50,7 +50,9 @@ class ServerInfo {
   bool auth_on;
 
   network::Address ipaddress;
-  Uint32 querystartticks;
+  // See MSInfo::lastTicks -- must be as wide as SDL_GetTicks() returns, or
+  // the ping computed from it is nonsense after 49.7 days of uptime.
+  Uint64 querystartticks;
 
   int tryNum;
 };

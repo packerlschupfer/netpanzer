@@ -43,7 +43,10 @@ class MSInfo {
   MSInfo() { touch(); };
   void touch() { lastTicks = SDL_GetTicks(); };
   std::string recdata;
-  Uint32 lastTicks;
+  // 64-bit to match SDL_GetTicks(): storing it in a Uint32 keeps only the low
+  // word, and every comparison against a full-width tick count goes wrong once
+  // the machine has been up for 49.7 days.
+  Uint64 lastTicks;
 };
 
 ServerQueryThread::ServerQueryThread(ServerList *newserverlist)
@@ -332,7 +335,7 @@ void ServerQueryThread::parseServerData(ServerInfo *server, std::string &data) {
 }
 
 void ServerQueryThread::checkTimeOuts() {
-  Uint32 now = SDL_GetTicks();
+  Uint64 now = SDL_GetTicks();
 
   if (querying_msdata.empty() && querying_server.empty() &&
       not_queried.empty()) {

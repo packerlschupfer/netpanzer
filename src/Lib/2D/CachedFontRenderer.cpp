@@ -36,7 +36,10 @@ std::unordered_map<std::string, RenderedText>
         CachedFontRenderer::rendered_surfaces = {};
 
 void CachedFontRenderer::initFont() {
-  if (TTF_Init() < 0) {
+  // SDL3_ttf returns true on success where SDL2_ttf returned 0, so the old
+  // "< 0" test could never fire and a failed init went unnoticed until the
+  // first render.
+  if (!TTF_Init()) {
     LOGGER.warning("Couldn't initialize SDL TTF: %s\n", SDL_GetError());
     exit(EXIT_FAILURE);
   }
