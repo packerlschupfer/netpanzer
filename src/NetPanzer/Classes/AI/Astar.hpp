@@ -88,12 +88,9 @@ class Astar : private MapInterface {
   unsigned long node_list_size;
 
   AstarNode *getNewNode();
-  void releaseNode(AstarNode *node);
   void resetNodeList();
   void initializeNodeList(unsigned long initial_size);
 
-  AstarNode *free_list_ptr;
-  bool dynamic_node_management_flag;
 
  protected:
   unsigned long mapXYtoAbsloc(iXY map_loc);
@@ -147,7 +144,7 @@ class Astar : private MapInterface {
                        unsigned long step_limit = 50);
 
   bool generatePath(PathRequest *path_request, unsigned short path_merge_type,
-                    bool dynamic_node_managment, int *result_code);
+                    int *result_code);
 
   void cleanUp();
 

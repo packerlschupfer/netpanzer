@@ -144,7 +144,7 @@ void PathGenerator::pathingFsmFullPath() {
       case _pathing_fsm_state_generate_path: {
         int path_result_code;
 
-        if (astar.generatePath(&path_request, _path_merge_front, false,
+        if (astar.generatePath(&path_request, _path_merge_front,
                                &path_result_code)) {
           if (path_result_code == _path_result_success) {
             path_cache.add(path_request);
@@ -196,7 +196,7 @@ void PathGenerator::pathingFsmUpdatePath() {
       case _pathing_fsm_state_generate_path: {
         int path_result_code;
 
-        if (astar.generatePath(&path_request, _path_merge_front, false,
+        if (astar.generatePath(&path_request, _path_merge_front,
                                &path_result_code)) {
           path_generation_status = _path_generator_status_waiting;
           pathing_fsm_state = _pathing_fsm_state_complete;
@@ -240,7 +240,7 @@ void PathGenerator::pathingFsmCachePath() {
       case _pathing_fsm_state_generate_path_part_a: {
         int path_result_code;
 
-        if (astar.generatePath(&path_request, _path_merge_front, false,
+        if (astar.generatePath(&path_request, _path_merge_front,
                                &path_result_code)) {
           pathing_fsm_state = _pathing_fsm_state_initialize_part_b;
 
@@ -268,7 +268,7 @@ void PathGenerator::pathingFsmCachePath() {
       case _pathing_fsm_state_generate_path_part_b: {
         int path_result_code;
 
-        if (astar.generatePath(&path_request, _path_merge_rear, false,
+        if (astar.generatePath(&path_request, _path_merge_rear,
                                &path_result_code)) {
           path_request.goal = working_goal;
           path_request.start = working_start;

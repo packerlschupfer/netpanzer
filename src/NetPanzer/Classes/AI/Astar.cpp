@@ -44,8 +44,6 @@ Astar::Astar() {
   // clean.
   node_index = 0;
   node_list_size = 0;
-  free_list_ptr = 0;
-  dynamic_node_management_flag = false;
 
   best_node = 0;
 
@@ -95,56 +93,15 @@ void Astar::initializeAstar(unsigned long node_list_size,
 }
 
 AstarNode *Astar::getNewNode() {
-  AstarNode *node_ptr;
-
-  if (dynamic_node_management_flag == true) {
-    if (free_list_ptr == 0) {
-      LOG(("No new node! (freelist empty)"));
-      return 0;
-    } else {
-      node_ptr = free_list_ptr;
-      free_list_ptr = free_list_ptr->parent;
-      return node_ptr;
-    }
-  } else {
-    if (node_index >= node_list_size) {
-      LOG(("no new node! (nodelist full)"));
-      return 0;
-    }
-
-    node_ptr = &node_list[node_index];
-    node_index++;
-
-    return node_ptr;
+  if (node_index >= node_list_size) {
+    LOG(("no new node! (nodelist full)"));
+    return 0;
   }
+
+  return &node_list[node_index++];
 }
 
-void Astar::releaseNode(AstarNode *node) {
-  if (dynamic_node_management_flag == true) {
-    node->parent = free_list_ptr;
-    free_list_ptr = node;
-  }
-}
-
-void Astar::resetNodeList() {
-  node_index = 0;
-
-  if (dynamic_node_management_flag == true) {
-    int node_list_index;
-    int node_list_start;
-
-    node_list_start = node_list_size - 2;
-
-    node_list[node_list_size - 1].parent = 0;
-
-    for (node_list_index = node_list_start; node_list_index >= 0;
-         node_list_index--) {
-      node_list[node_list_index].parent = &(node_list[node_list_index + 1]);
-    }
-
-    free_list_ptr = &(node_list[0]);
-  }
-}
+void Astar::resetNodeList() { node_index = 0; }
 
 void Astar::initializeNodeList(unsigned long initial_size) {
   node_index = 0;
@@ -291,12 +248,10 @@ unsigned char Astar::generateSucc(unsigned short direction, AstarNode *node,
 }
 
 bool Astar::generatePath(PathRequest *path_request,
-                         unsigned short path_merge_type,
-                         bool dynamic_node_managment, int *result_code) {
+                         unsigned short path_merge_type, int *result_code) {
   if (ini_flag) {
     Astar::path_request_ptr = path_request;
     Astar::path_merge_type = path_merge_type;
-    Astar::dynamic_node_management_flag = dynamic_node_managment;
     initializePath(path_request->start, path_request->goal,
                    path_request->path_type);
     ini_flag = false;
@@ -373,8 +328,7 @@ bool Astar::process_succ(PathList *path, int *result_code) {
     if (start_sampling_flag == true)
       astar_set_array.setBit(best_node->map_loc.x, best_node->map_loc.y);
 
-    releaseNode(best_node);
-
+  
     succ_swap_flag = !succ_swap_flag;
 
     if (steps > step_limit) {
@@ -503,7 +457,7 @@ namespace {
 bool runToCompletion(Astar& astar, PathRequest& request, int* result_code) {
   const int MAX_ITERATIONS = 200000;
   for (int i = 0; i < MAX_ITERATIONS; i++) {
-    if (astar.generatePath(&request, _path_merge_front, false, result_code)) {
+    if (astar.generatePath(&request, _path_merge_front, result_code)) {
       return true;
     }
   }
