@@ -23,9 +23,14 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
-          - linux/arm/v7
+          # linux/arm/v7 dropped, same as for the AppImage: SDL3 does not
+          # assemble on 32-bit ARM here ("thumb conditional instruction should
+          # be in IT block" out of its own atomic code), and this branch builds
+          # SDL3 from the wrap. Source builds via support/cross/ remain.
 
-      fail-fast: true
+      # One architecture failing used to cancel the others, so an arm/v7
+      # failure said nothing about amd64 or arm64.
+      fail-fast: false
     steps:
       -
         name: Prepare
