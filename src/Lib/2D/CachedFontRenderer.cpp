@@ -119,6 +119,19 @@ SDL_Surface *CachedFontRenderer::renderWrapped(const char *text, SDL_Color color
   return render(text, color, blendColor, true, wrapLength);
 }
 
+void CachedFontRenderer::shutdown() {
+  for (auto &entry : rendered_surfaces) {
+    SDL_DestroySurface(entry.second.sdlSurface);
+  }
+  rendered_surfaces.clear();
+
+  if (font != nullptr) {
+    TTF_CloseFont(font);
+    font = nullptr;
+  }
+  TTF_Quit();
+}
+
 void CachedFontRenderer::cleanup() {
   const Uint64 currentTick = SDL_GetTicks();
   const Uint64 cleanupThreshold = 20000;

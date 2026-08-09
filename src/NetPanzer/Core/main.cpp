@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Interfaces/BaseGameManager.hpp"
 #include "Interfaces/BotGameManager.hpp"
 #include "Interfaces/DedicatedGameManager.hpp"
+#include "2D/CachedFontRenderer.hpp"
 #include "Interfaces/GameConfig.hpp"
 #include "Interfaces/PlayerGameManager.hpp"
 #include "Localization.hpp"
@@ -88,6 +89,10 @@ void shutdown(bool save_config) {
   UnitProfileSprites::clearProfiles();
   UnitProfileInterface::clearProfiles();
   //
+
+  // Before SDL_Quit: the cached text surfaces and the font are SDL objects,
+  // and freeing them after SDL has shut down is not allowed.
+  CachedFontRenderer::shutdown();
 
   SDL_Quit();
   if (save_config && gameconfig) {

@@ -47,6 +47,10 @@ class CachedFontRenderer {
 
  public:
   static void initFont();
+  /// Counterpart to initFont(): frees every cached surface, closes the font
+  /// and shuts SDL_ttf down. Must run before SDL_Quit(), since the cached
+  /// surfaces belong to SDL.
+  static void shutdown();
   static SDL_Surface* render(const char* text, SDL_Color color, SDL_Color blendColor);
   static SDL_Surface* renderWrapped(const char* text, SDL_Color color, SDL_Color blendColor, int wrapLength);
   static void cleanup();
