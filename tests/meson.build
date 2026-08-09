@@ -35,9 +35,11 @@ foreach case : test_cases
       # this the data-dependent tests fail for anyone who has not read
       # BUILD.md. Note this points at the "data" directory itself, not at the
       # source root.
-      'NETPANZER_DATADIR=@0@'.format(
-        join_paths(meson.project_source_root(), 'data')
-        )
+      # Built by concatenation rather than join_paths on purpose: the package
+      # test compares against MESON_SOURCE_ROOT "/data" spelled exactly this
+      # way, and on Windows join_paths normalises the source root's
+      # backslashes to forward slashes, so the two stop matching.
+      'NETPANZER_DATADIR=@0@/data'.format(meson.project_source_root())
       ]
     )
 endforeach
