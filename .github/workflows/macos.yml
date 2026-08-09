@@ -53,9 +53,10 @@ jobs:
           ninja \
           gettext \
           physfs \
-          pkg-config \
-          sdl2_ttf \
-          sdl2_mixer
+          pkg-config
+        # No SDL packages: SDL3, SDL3_ttf and SDL3_mixer come from the wraps,
+        # as they do on Linux. macOS needs no extra audio packages either --
+        # SDL3's CoreAudio backend is always built.
         # Make sure msgfmt is on PATH so the translations get built; older
         # gettext formulas were keg-only. Harmless when it is already linked.
         # Meson locates libintl on its own either way.
