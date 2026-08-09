@@ -122,7 +122,6 @@ jobs:
             sudo apt update
             sudo apt install -y \
               g++-aarch64-linux-gnu \
-              pkg-config-aarch64-linux-gnu \
               gettext \
               libc6-dev-arm64-cross \
               wayland-protocols \
@@ -135,6 +134,12 @@ jobs:
               libegl-dev:arm64 \
               libasound2-dev:arm64 \
               libpulse-dev:arm64
+            # This release has no pkg-config-aarch64-linux-gnu, so supply the
+            # wrapper the cross file names: plain pkg-config pointed at the
+            # arm64 multiarch directories, which is all the packaged one does.
+            printf '#!/bin/sh\nexport PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig\nexec pkg-config "$@"\n' | sudo tee /usr/local/bin/aarch64-linux-gnu-pkg-config >/dev/null
+            sudo chmod +x /usr/local/bin/aarch64-linux-gnu-pkg-config
+            aarch64-linux-gnu-pkg-config --list-all | head -5
           else
             # When using the mingw-w64 from Ubuntu Jammy, the SDL build fails
             # fatal error: d3d12sdklayers.h: No such file or directory
