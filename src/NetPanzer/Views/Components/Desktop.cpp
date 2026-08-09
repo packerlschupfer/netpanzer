@@ -333,10 +333,12 @@ void Desktop::clearAll() {
 //--------------------------------------------------------------------------
 void Desktop::remove(View *view) {
   // std::remove only shuffles the survivors to the front and hands back the
-  // new logical end; without the erase the vector keeps its old size and the
-  // view is still in it. That matters more than it sounds: the one caller
-  // deletes the view straight after calling this, so what stayed behind was a
-  // dangling pointer that every later draw and event dispatch walked over.
+  // new logical end; without the erase the vector keeps its old size. Measured
+  // on a real game load: 32 entries before, 32 after, and one view left
+  // duplicated in the tail. So the view was never actually removed -- the
+  // duplicate got drawn and handed events twice every frame, and since
+  // LoadingView::loadFinish adds a fresh view straight after, the list grew by
+  // one on every load and every round transition.
   if (view)
     views.erase(std::remove(views.begin(), views.end(), view), views.end());
 }  // end remove
