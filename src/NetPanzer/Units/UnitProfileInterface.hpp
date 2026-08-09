@@ -59,6 +59,17 @@ class UnitProfile {
   Uint16 boundBox;
 };
 
+/**
+ * The four sprite packs for one unit type in one unit style.
+ *
+ * These are loaded on first use rather than up front. Loading them eagerly
+ * meant every unit-profile message from the server pulled four packs off disk
+ * for every style the server advertised -- with ten styles and eleven unit
+ * types that is 440 synchronous loads, and it happened inside the network
+ * message handler, which runs inside the sim loop. It showed up as a ~114 ms
+ * freeze per unit type. A game normally draws one or two styles, so almost
+ * all of that work was for sprites nobody would ever see.
+ */
 class UnitProfileSprites {
  public:
   PackedSurface bodySprite;
@@ -66,9 +77,23 @@ class UnitProfileSprites {
   PackedSurface turretSprite;
   PackedSurface turretShadow;
 
- protected:
+  /// Remember where the packs live so they can be fetched on demand.
+  void setSource(const NPString& style_path, const UnitProfile* profile);
+  /// Load the packs if they are not in memory yet.
+  void ensureLoaded();
+
+ private:
+  NPString body_path;
+  NPString body_shadow_path;
+  NPString turret_path;
+  NPString turret_shadow_path;
+  bool loaded = false;
+
  public:
   static std::vector<UnitProfileSprites*> profiles_sprites;
+  /// Returns the sprites for this slot, loading them if this is their first
+  /// use. Always go through this rather than indexing profiles_sprites
+  /// directly, or the packs will be empty.
   static UnitProfileSprites* getUnitProfileSprites(unsigned short vector_index);
   static void clearProfiles();
 };

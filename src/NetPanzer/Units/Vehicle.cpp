@@ -202,18 +202,19 @@ Vehicle::Vehicle(bool liveornot, PlayerState *player, unsigned char utype,
 
     select_info_box.setHitBarAttributes(profile->hit_points, Color::yellow);
 
-    body_anim.setData(
-        UnitProfileSprites::profiles_sprites[utype * stylesnum + unit_style]
-            ->bodySprite);
-    body_anim_shadow.setData(
-        UnitProfileSprites::profiles_sprites[utype * stylesnum + unit_style]
-            ->bodyShadow);
-    turret_anim.setData(
-        UnitProfileSprites::profiles_sprites[utype * stylesnum + unit_style]
-            ->turretSprite);
-    turret_anim_shadow.setData(
-        UnitProfileSprites::profiles_sprites[utype * stylesnum + unit_style]
-            ->turretShadow);
+    // Through the accessor, not the vector: the packs are read from disk on
+    // first use and indexing the vector directly would hand back empty ones.
+    UnitProfileSprites *sprites = UnitProfileSprites::getUnitProfileSprites(
+        utype * stylesnum + unit_style);
+    if (sprites) {
+      body_anim.setData(sprites->bodySprite);
+      body_anim_shadow.setData(sprites->bodyShadow);
+      turret_anim.setData(sprites->turretSprite);
+      turret_anim_shadow.setData(sprites->turretShadow);
+    } else {
+      LOGGER.warning("No sprites for unit type %d style %d", utype,
+                     unit_state.unit_style);
+    }
 
     soundSelect = profile->soundSelected;
     fireSound = profile->fireSound;
@@ -337,21 +338,19 @@ void Vehicle::setUnitProperties(unsigned char utype) {
 
   select_info_box.setHitBarAttributes(profile->hit_points, Color::yellow);
 
-  body_anim.setData(UnitProfileSprites::profiles_sprites[utype * stylesnum +
-                                                         unit_state.unit_style]
-                        ->bodySprite);
-  body_anim_shadow.setData(
-      UnitProfileSprites::profiles_sprites[utype * stylesnum +
-                                           unit_state.unit_style]
-          ->bodyShadow);
-  turret_anim.setData(
-      UnitProfileSprites::profiles_sprites[utype * stylesnum +
-                                           unit_state.unit_style]
-          ->turretSprite);
-  turret_anim_shadow.setData(
-      UnitProfileSprites::profiles_sprites[utype * stylesnum +
-                                           unit_state.unit_style]
-          ->turretShadow);
+  // Through the accessor, not the vector: see the note in the other
+  // constructor.
+  UnitProfileSprites *sprites = UnitProfileSprites::getUnitProfileSprites(
+      utype * stylesnum + unit_state.unit_style);
+  if (sprites) {
+    body_anim.setData(sprites->bodySprite);
+    body_anim_shadow.setData(sprites->bodyShadow);
+    turret_anim.setData(sprites->turretSprite);
+    turret_anim_shadow.setData(sprites->turretShadow);
+  } else {
+    LOGGER.warning("No sprites for unit type %d style %d", utype,
+                   unit_state.unit_style);
+  }
 
   /*
   body_anim.setData( profile->bodySprite );

@@ -215,18 +215,10 @@ bool read_vehicle_profile(const NPString &unitName, UnitProfile *profile) {
       NPString spath = GameConfig::getUnitStyle(style_index);
       NPString ustylepath = "units/pics/pak/" + spath + "/";
 
-      try {
-        ups->bodySprite.load(ustylepath + profile->bodySprite_name);
-        ups->bodyShadow.load(ustylepath + profile->bodyShadow_name);
-        ups->turretSprite.load(ustylepath + profile->turretSprite_name);
-        ups->turretShadow.load(ustylepath + profile->turretShadow_name);
-
-      } catch (std::exception &e) {
-        LOGGER.warning("Error loading unitprofile sprites '%s': %s",
-                       file_path.c_str(), e.what());
-
-        isok = false;
-      }
+      // Recorded now, read on first use -- see the note on
+      // UnitProfileSprites. A dedicated server never draws anything, so it
+      // now never touches these files at all.
+      ups->setSource(ustylepath, profile);
       UnitProfileSprites::profiles_sprites.push_back(ups);
       style_index++;
     }
@@ -370,10 +362,45 @@ bool UnitProfileInterface::addLocalProfile(const NPString &name) {
   return true;
 }
 
+void UnitProfileSprites::setSource(const NPString &style_path,
+                                  const UnitProfile *profile) {
+  body_path = style_path + profile->bodySprite_name;
+  body_shadow_path = style_path + profile->bodyShadow_name;
+  turret_path = style_path + profile->turretSprite_name;
+  turret_shadow_path = style_path + profile->turretShadow_name;
+  loaded = false;
+}
+
+void UnitProfileSprites::ensureLoaded() {
+  if (loaded) return;
+  loaded = true;  // set first: a failed load should not be retried every frame
+
+  if (body_path.empty()) {
+    LOGGER.warning("Unit sprites used before their source was recorded");
+    return;
+  }
+
+  try {
+    bodySprite.load(body_path);
+  bodyShadow.load(body_shadow_path);
+  turretSprite.load(turret_path);
+  turretShadow.load(turret_shadow_path);
+  } catch (std::exception &e) {
+    // Drawing must not throw; an absent pack shows as a missing sprite.
+    LOGGER.warning("Error loading unit sprites '%s': %s", body_path.c_str(),
+                   e.what());
+    return;
+  }
+
+}
+
 UnitProfileSprites *UnitProfileSprites::getUnitProfileSprites(
     unsigned short vector_index) {
-  if (vector_index < profiles_sprites.size())
-    return profiles_sprites[vector_index];
+  if (vector_index < profiles_sprites.size()) {
+    UnitProfileSprites *ups = profiles_sprites[vector_index];
+    if (ups) ups->ensureLoaded();
+    return ups;
+  }
   return 0;
 }
 
@@ -472,16 +499,17 @@ UnitProfile *UnitProfileInterface::loadProfileFromMessage(
   br.readString(p->weaponType);
   br.readInt16(&p->boundBox);
 
+  // Only record where the packs are; they are read on first use. Doing the
+  // loads here meant four packs per style per unit type -- 440 files for a
+  // ten-style server -- read synchronously inside the network message
+  // handler, which is inside the sim loop.
   int style_index = 0;
   while (style_index < GameManager::ststylesnum) {
     UnitProfileSprites *ups = new UnitProfileSprites();
     NPString spath = GameManager::stlist[style_index];
     NPString ustylepath = "units/pics/pak/" + spath + "/";
 
-    ups->bodySprite.load(ustylepath + p->bodySprite_name);
-    ups->bodyShadow.load(ustylepath + p->bodyShadow_name);
-    ups->turretSprite.load(ustylepath + p->turretSprite_name);
-    ups->turretShadow.load(ustylepath + p->turretShadow_name);
+    ups->setSource(ustylepath, p);
 
     UnitProfileSprites::profiles_sprites.push_back(ups);
 
