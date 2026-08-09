@@ -108,11 +108,17 @@ jobs:
             # which is where Ubuntu keeps non-x86 builds.
             sudo dpkg --add-architecture arm64
             codename=$(lsb_release -cs)
-            # Existing entries have to be pinned to amd64 first, or apt tries
-            # to fetch arm64 indexes from archives that do not carry them.
-            sudo sed -i 's|^deb http|deb [arch=amd64] http|g' /etc/apt/sources.list
-            sudo sed -i 's|^deb http|deb [arch=amd64] http|g' /etc/apt/sources.list.d/*.list || true
-            printf 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s main universe\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s-updates main universe\n' "$codename" "$codename" | sudo tee /etc/apt/sources.list.d/arm64-ports.list
+            # Every existing entry has to be pinned to amd64 first, or apt
+            # looks for arm64 indexes on archives that do not carry them and
+            # apt update fails. Two source formats are in play: classic
+            # one-line .list files and deb822 .sources files. Entries that
+            # already carry options are left alone -- rewriting those would
+            # drop their signed-by keys.
+            sudo find /etc/apt -name '*.list' -exec sed -i -E '/^deb /{/\[/!s|^deb |deb [arch=amd64] |}' {} +
+            sudo find /etc/apt -name '*.sources' -exec sh -c 'grep -q "^Architectures:" "$1" || printf "Architectures: amd64\n" | sudo tee -a "$1" >/dev/null' _ {} \;
+            printf 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s main universe\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s-updates main universe\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports %s-security main universe\n' "$codename" "$codename" "$codename" | sudo tee /etc/apt/sources.list.d/arm64-ports.list
+            echo "--- apt sources after pinning ---"
+            grep -rh '^deb ' /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null || true
             sudo apt update
             sudo apt install -y \
               g++-aarch64-linux-gnu \

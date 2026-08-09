@@ -95,3 +95,20 @@
  sources += files(
    'SDL_audio.c',
    'SDL_audiocvt.c',
+--- a/src/video/meson.build
++++ b/src/video/meson.build
+@@ -40,6 +40,14 @@
+   endif
+ endif
+ 
++# The dummy video driver, on every platform. SDL uses it when no real backend
++# can open a display, and without it a headless run -- CI, a dedicated server,
++# an automated test -- cannot start at all: SDL_Init(SDL_INIT_VIDEO) fails with
++# "dummy not available" even when SDL_VIDEO_DRIVER=dummy is set explicitly.
++# The port compiled only Wayland here, so there was no fallback of any kind.
++cdata.set('SDL_VIDEO_DRIVER_DUMMY', 1)
++subdir('dummy')
++
+ sources += files(
+   'SDL_blit.c',
+   'SDL_blit_0.c',

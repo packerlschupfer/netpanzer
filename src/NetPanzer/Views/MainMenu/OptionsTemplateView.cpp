@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "System/SDLSound.hpp"
 #include "System/Sound.hpp"
 #include "Util/Exception.hpp"
+#include "Util/Log.hpp"
 #include "Views/Components/Button.hpp"
 #include "Views/Components/Desktop.hpp"
 #include "Views/Components/Label.hpp"
@@ -142,6 +143,28 @@ bool hasSize(const std::vector<SDL_DisplayMode> &modes, int w, int h) {
   return false;
 }
 
+// The smallest resolution the game supports; also the fallback when the
+// display reports nothing usable.
+static const int MIN_DISPLAY_WIDTH = 800;
+static const int MIN_DISPLAY_HEIGHT = 600;
+
+static SDL_DisplayMode makeFallbackDisplayMode(SDL_DisplayID display_id) {
+  SDL_DisplayMode mode;
+  SDL_zero(mode);
+
+  const SDL_DisplayMode *current = SDL_GetCurrentDisplayMode(display_id);
+  if (current != nullptr) {
+    mode = *current;
+  } else {
+    mode.w = GameConfig::video_width;
+    mode.h = GameConfig::video_height;
+  }
+
+  if (mode.w < MIN_DISPLAY_WIDTH) mode.w = MIN_DISPLAY_WIDTH;
+  if (mode.h < MIN_DISPLAY_HEIGHT) mode.h = MIN_DISPLAY_HEIGHT;
+  return mode;
+}
+
 std::vector<SDL_DisplayMode> OptionsTemplateView::getUsableDisplayModes() {
   if (!usableDisplayModes.empty()) {
     return usableDisplayModes;
@@ -154,7 +177,14 @@ std::vector<SDL_DisplayMode> OptionsTemplateView::getUsableDisplayModes() {
       SDL_GetFullscreenDisplayModes(display_id, &display_mode_count);
   if (modes == nullptr || display_mode_count < 1) {
     SDL_free(modes);
-    throw Exception("SDL_GetFullscreenDisplayModes failed: %s", SDL_GetError());
+    // No fullscreen modes at all. That is normal headless -- the dummy video
+    // driver reports none -- and it used to abort the whole game from here,
+    // even though this list only fills the resolution selector in the options
+    // menu. Fall back to what the display reports, or the configured size.
+    LOGGER.warning("No fullscreen display modes available (%s); using a fallback resolution.",
+                   SDL_GetError());
+    usableDisplayModes.push_back(makeFallbackDisplayMode(display_id));
+    return usableDisplayModes;
   }
   for (int i = 0; i < display_mode_count; i++) {
     SDL_DisplayMode mode = *modes[i];
@@ -173,6 +203,13 @@ std::vector<SDL_DisplayMode> OptionsTemplateView::getUsableDisplayModes() {
   // The array is ours to release; the SDL_DisplayMode values were copied out
   // of it above.
   SDL_free(modes);
+
+  // Every reported mode can still be below the minimum the game accepts, which
+  // would leave the selector empty and the callers indexing into nothing.
+  if (usableDisplayModes.empty()) {
+    LOGGER.warning("No display mode is at least 800x600; using a fallback resolution.");
+    usableDisplayModes.push_back(makeFallbackDisplayMode(display_id));
+  }
   return usableDisplayModes;
 }
 
