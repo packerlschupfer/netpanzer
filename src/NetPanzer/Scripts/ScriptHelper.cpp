@@ -45,7 +45,11 @@ static void notModifiedError(lua_State *L, const char *what) {
 }
 
 int ScriptHelper::get_byte(lua_State *L, void *v) {
-  lua_pushnumber(L, *(unsigned char *)v);
+  // pushinteger, not pushnumber. Since Lua 5.3 a number is an integer or a
+  // float and keeps that distinction through tostring(), and the config file
+  // is written by a Lua function that calls tostring() on every value. Pushed
+  // as a float, an integer setting would be saved as "1920.0".
+  lua_pushinteger(L, *(unsigned char *)v);
   return 1;
 }
 
@@ -60,7 +64,8 @@ int ScriptHelper::set_byte(lua_State *L, void *v) {
 }
 
 int ScriptHelper::get_int(lua_State *L, void *v) {
-  lua_pushnumber(L, *(int *)v);
+  // See get_byte: integers have to be pushed as integers to survive tostring().
+  lua_pushinteger(L, *(int *)v);
   return 1;
 }
 

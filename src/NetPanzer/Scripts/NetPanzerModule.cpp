@@ -240,6 +240,9 @@ static const luaL_Reg npmodule[] = {
     {NULL, NULL}};
 
 int npmodule_load(lua_State *L) {
-  luaL_register(L, "netpanzer", npmodule);
+  // luaL_register is gone as of Lua 5.2. openLib reproduces what it did and,
+  // like it, leaves the module table on the stack -- which is what the 1 here
+  // tells the caller to pop.
+  ScriptManager::openLib(L, "netpanzer", npmodule);
   return 1;
 }

@@ -34,6 +34,12 @@ class ScriptManager {
 
   static void registerLib(const NPString& libname, const luaL_Reg* functions);
 
+  /// What luaL_register did before Lua 5.2 removed it: find or create the
+  /// global table named libname, register functions into it, and leave that
+  /// table on the stack for the caller to pop.
+  static void openLib(lua_State* L, const char* libname,
+                      const luaL_Reg* functions);
+
   static void runStr(const NPString& runname, const NPString& str);
   static void runFunction(const NPString& func_name);
   static bool runUserCommand(const NPString& str);

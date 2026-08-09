@@ -81,7 +81,7 @@ static void DumpStack (const NPString& text, lua_State *L)
  */
 static void PrepareTableIndex(lua_State* luavm, const NPString& table,
                               NPString& finalName) {
-  lua_pushvalue(luavm, LUA_GLOBALSINDEX);
+  lua_pushglobaltable(luavm);
 
   NPString::size_type start = 0;
   NPString::size_type end = table.find_first_of(".");
@@ -128,10 +128,26 @@ void ScriptManager::close() {
   luavm = 0;
 }
 
+void ScriptManager::openLib(lua_State* L, const char* libname,
+                            const luaL_Reg* functions) {
+  lua_getglobal(L, libname);
+  if (!lua_istable(L, -1)) {
+    lua_pop(L, 1);
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, libname);
+  }
+  // nup = 0: none of these take upvalues, which is what luaL_register assumed.
+  luaL_setfuncs(L, functions, 0);
+}
+
 void ScriptManager::registerLib(const NPString& libname,
                                 const luaL_Reg* functions) {
-  luaL_register(luavm, libname.c_str(), functions);
-  lua_pop(luavm, -1);
+  openLib(luavm, libname.c_str(), functions);
+  // Pop the table openLib left behind. This was written lua_pop(luavm, -1),
+  // which expands to lua_settop(luavm, 0) and emptied the whole stack; it only
+  // ever behaved because registration happens with nothing else on it.
+  lua_pop(luavm, 1);
 }
 
 void ScriptManager::runStr(const NPString& runname, const NPString& str) {
@@ -240,7 +256,9 @@ bool ScriptManager::runServerCommand(const NPString& str, PlayerID runPlayer) {
         lua_getfield(luavm, -1, command.c_str());
         if (lua_isfunction(luavm, -1)) {
           lua_pushstring(luavm, params.c_str());
-          lua_pushnumber(luavm, runPlayer);
+          // A player id is an integer; pushing it as a float would make any
+          // script that concatenates it print "3.0" instead of "3".
+          lua_pushinteger(luavm, runPlayer);
 
           if (lua_pcall(luavm, 2, 0, 0) != 0) {
             std::stringstream errormsg;
@@ -292,7 +310,13 @@ void ScriptManager::runFileInTable(const NPString& filename,
     lua_setglobal(luavm, table.c_str());
   }
 
-  if (!lua_setfenv(luavm, -2)) {
+  // Lua 5.2 replaced per-function environments with the _ENV upvalue. For a
+  // chunk loaded by luaL_loadfile, _ENV is upvalue 1, so setting it is the
+  // direct equivalent of the old lua_setfenv. lua_setupvalue pops the value
+  // on success and leaves it alone on failure, where lua_setfenv always
+  // popped -- hence the extra pop in the error branch.
+  if (lua_setupvalue(luavm, -2, 1) == NULL) {
+    lua_pop(luavm, 1);
     LOGGER.warning("Error in runFileInTable: can't set environment.");
     lua_pop(luavm, 2);
     return;
@@ -343,7 +367,13 @@ void ScriptManager::loadConfigFile(const NPString& filename,
 
   // stack: file, table
 
-  if (!lua_setfenv(luavm, -2)) {
+  // Lua 5.2 replaced per-function environments with the _ENV upvalue. For a
+  // chunk loaded by luaL_loadfile, _ENV is upvalue 1, so setting it is the
+  // direct equivalent of the old lua_setfenv. lua_setupvalue pops the value
+  // on success and leaves it alone on failure, where lua_setfenv always
+  // popped -- hence the extra pop in the error branch.
+  if (lua_setupvalue(luavm, -2, 1) == NULL) {
+    lua_pop(luavm, 1);
     LOGGER.warning("Error in loadConfigFile: can't set environment.");
     lua_pop(luavm, 2);
     return;
@@ -369,7 +399,13 @@ bool ScriptManager::loadSimpleConfig(const NPString& filename) {
   }
 
   lua_pushvalue(luavm, -2);
-  if (!lua_setfenv(luavm, -2)) {
+  // Lua 5.2 replaced per-function environments with the _ENV upvalue. For a
+  // chunk loaded by luaL_loadfile, _ENV is upvalue 1, so setting it is the
+  // direct equivalent of the old lua_setfenv. lua_setupvalue pops the value
+  // on success and leaves it alone on failure, where lua_setfenv always
+  // popped -- hence the extra pop in the error branch.
+  if (lua_setupvalue(luavm, -2, 1) == NULL) {
+    lua_pop(luavm, 1);
     LOGGER.warning("Error in loadSimpleConfig: can't set environment.");
     lua_pop(luavm, 2);
     return false;

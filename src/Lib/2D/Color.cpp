@@ -109,9 +109,11 @@ static const ScriptVarBindRecord color_setters[] = {
     GEN_COLORS(GEN_SETSTRUCT){0, 0}};
 
 static int color_rgb(lua_State* L) {
-  int r = luaL_checkint(L, 1);  // r
-  int g = luaL_checkint(L, 2);  // g
-  int b = luaL_checkint(L, 3);  // b
+  // luaL_checkint was removed in Lua 5.2; luaL_checkinteger returns the wider
+  // lua_Integer, which these three narrow back to int as before.
+  int r = (int)luaL_checkinteger(L, 1);  // r
+  int g = (int)luaL_checkinteger(L, 2);  // g
+  int b = (int)luaL_checkinteger(L, 3);  // b
 
   int color = Palette::findNearestColor(r, g, b, true);
 

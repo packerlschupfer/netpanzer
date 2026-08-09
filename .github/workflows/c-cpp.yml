@@ -103,7 +103,7 @@ jobs:
               g++-aarch64-linux-gnu \
               gettext:amd64 \
               libc6-dev-arm64-cross \
-              liblua5.1-dev:amd64 \
+              liblua5.4-dev:amd64 \
               libphysfs-dev:amd64 \
               libasound2-dev:amd64 \
               libpulse-dev:amd64
@@ -125,7 +125,7 @@ jobs:
       run: |
         sudo apt install -y \
           gettext \
-          liblua5.1-0-dev \
+          liblua5.4-dev \
           libphysfs-dev \
           libasound2-dev \
           libpulse-dev

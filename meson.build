@@ -73,19 +73,25 @@ config_h = configure_file(output : 'config.h', configuration : conf)
 meson.add_devenv({'NETPANZER_DATADIR': join_paths(meson.project_source_root(), 'data')})
 meson.add_devenv({'NETPANZER_LOCALEDIR': join_paths(meson.project_build_root(), 'po')})
 
-# this won't use fallback defined in subprojects/lua.wrap
-lua_dep = dependency('lua-5.1', required: false)
+# Lua 5.4. The pkg-config name differs between distributions, so try the ones
+# in circulation before falling back to the wrap. Deliberately no generic
+# find_library('lua') here: on a machine with both 5.1 and 5.4 installed it
+# picks whichever it finds first, and 5.1 no longer has the API this uses.
+lua_dep = dependency('lua-5.4', required: false)
 if not lua_dep.found()
-  lua_dep = cc.find_library('lua', has_headers: 'lua.h', required: false)
-  if not lua_dep.found()
-    # This will use the fallback
-    lua_dep = dependency(
-      'lua-5.1',
-      required: true,
-      fallback: 'lua',
-      default_options: ['default_library=static']
-      )
-  endif
+  lua_dep = dependency('lua5.4', required: false)
+endif
+if not lua_dep.found()
+  lua_dep = dependency('lua', version: '>=5.4', required: false)
+endif
+if not lua_dep.found()
+  # This will use the fallback
+  lua_dep = dependency(
+    'lua-5.4',
+    required: true,
+    fallback: 'lua',
+    default_options: ['default_library=static']
+    )
 endif
 deps += lua_dep
 

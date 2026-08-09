@@ -52,7 +52,6 @@ sudo apt update && sudo apt upgrade -y
 # fine, and is completely silent.
 sudo apt install -y \
   gettext \
-  liblua5.1-0-dev \
   libphysfs-dev \
   libasound2-dev \
   libpulse-dev

@@ -26,7 +26,25 @@ function dump_table(result, t, extra)
         return
     end    
     
-	for key,value in pairs(t) do
+    -- Sorted, not raw pairs(). Lua 5.4 randomises its hash seed for every
+    -- state, so pairs() hands back a different order on every launch and the
+    -- config file was being rewritten shuffled each time. Sorting makes the
+    -- output depend only on the contents.
+    local keys = {}
+    for key in pairs(t) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys, function(a, b)
+        if type(a) == type(b) then
+            return a < b
+        end
+        -- Mixed key types never compare with <; order them by type name so
+        -- the result is still deterministic.
+        return type(a) < type(b)
+    end)
+
+    for _,key in ipairs(keys) do
+        local value = t[key]
         local keytext
 	    local valuetext
     
