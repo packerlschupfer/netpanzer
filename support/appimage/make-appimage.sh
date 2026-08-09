@@ -53,6 +53,11 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y \
   gettext \
   libphysfs-dev \
+  libudev-dev \
+  libdbus-1-dev \
+  libwayland-dev \
+  wayland-protocols \
+  libxkbcommon-dev \
   libasound2-dev \
   libpulse-dev
 

@@ -86,7 +86,6 @@ jobs:
       run: |
         sudo apt update
         sudo apt remove -y firefox # save a little time during upgrade
-        sudo apt upgrade -y
         sudo apt install -y \
           python3 \
           python3-setuptools
@@ -105,6 +104,11 @@ jobs:
               libc6-dev-arm64-cross \
               liblua5.4-dev:amd64 \
               libphysfs-dev:amd64 \
+              libudev-dev:amd64 \
+              libdbus-1-dev:amd64 \
+              libwayland-dev:amd64 \
+              wayland-protocols \
+              libxkbcommon-dev:amd64 \
               libasound2-dev:amd64 \
               libpulse-dev:amd64
           else
@@ -127,6 +131,11 @@ jobs:
           gettext \
           liblua5.4-dev \
           libphysfs-dev \
+          libudev-dev \
+          libdbus-1-dev \
+          libwayland-dev \
+          wayland-protocols \
+          libxkbcommon-dev \
           libasound2-dev \
           libpulse-dev
 

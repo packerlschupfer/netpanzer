@@ -26,17 +26,25 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt upgrade -y
         sudo apt install -y \
           gettext \
           liblua5.4-dev \
           libphysfs-dev \
+          libudev-dev \
+          libdbus-1-dev \
+          libwayland-dev \
+          wayland-protocols \
+          libxkbcommon-dev \
           libasound2-dev \
           libpulse-dev \
-          meson \
           ninja-build \
           python3 \
           python3-setuptools
+        # meson from pip, not apt: the SDL3 wrap needs >= 1.6 and
+        # Ubuntu 22.04 ships 0.61.
+        sudo apt install -y python3-pip
+        python3 -m pip install --upgrade pip
+        pip install meson ninja
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
